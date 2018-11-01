@@ -110,6 +110,8 @@ Type objective_function<Type>::operator() ()
   // Data
   DATA_MATRIX(C_i);       	// Matrix of responses (counts) of each species at each sampled location 
   DATA_VECTOR(Pups_i);      // vector holding observations of pups in each sampled cell
+  DATA_VECTOR(Nophoto_i);   // vector holding observations of number of animals without a photograph
+  DATA_VECTOR(Prop_photo_i);  // proportion of animals in cell i that were photographed 
   DATA_VECTOR( P_i );      // Proportion of survey unit that is surveyed for each observation i
   DATA_VECTOR( A_s );      // Relative area of each survey unit s (can set = 1.0 if all the same size)
   DATA_IVECTOR(S_i); // Site-time index for each sample
@@ -176,9 +178,9 @@ Type objective_function<Type>::operator() ()
 		  Thin_i(isp, i) = P_i(i)*A_s(S_i(i))*Thin_trans(isp, i);
 	  }
   }
-  vector<Type> phi(n_obs_types+1);
-  vector<Type> power(n_obs_types+1);
-  for (int i = 0; i<(n_obs_types+1); i++) {
+  vector<Type> phi(n_obs_types+2);
+  vector<Type> power(n_obs_types+2);
+  for (int i = 0; i<(n_obs_types+2); i++) {
 	  phi(i) = exp(phi_log(i));
 	  power(i) = 1.0 + 1 / (1 + exp(-p_logit(i)));
   }
@@ -226,6 +228,7 @@ Type objective_function<Type>::operator() ()
   matrix<Type> E_count_sp(n_sp, n_i);
   matrix<Type> E_count_obs(n_i, n_obs_types);
   vector<Type> E_count_pup(n_i);
+  vector<Type> E_count_nophoto(n_i);
   vector<Type> linpredZ_s(n_s);
   vector<Type> Beta_tmp(n_b);
   for (int isp = 0; isp<n_sp; isp++) {
@@ -239,20 +242,23 @@ Type objective_function<Type>::operator() ()
   // Probability of counts
   E_count_obs = E_count_obs.setZero();
   E_count_pup = E_count_pup.setZero();
+  E_count_nophoto = E_count_nophoto.setZero();
   for (int i = 0; i<n_i; i++) {
 	  for (int isp = 0; isp<n_sp; isp++) {
-		  E_count_sp(isp, i) = Z_s(isp, S_i(i))*(1.0-Pup_prop(isp))*Thin_i(isp, i);
+		  E_count_sp(isp, i) = Z_s(isp, S_i(i))*(1.0-Pup_prop(isp))*Thin_i(isp, i)*Prop_photo_i(i);
 		  for (int itype = 0; itype<n_obs_types; itype++) {
 			  E_count_obs(i, itype) += E_count_sp(isp, i)*Psi(isp, itype);
 		  }
-		  E_count_pup(i) += Z_s(isp, S_i(i))*Pup_prop(isp)*Thin_i(isp, i);
+		  E_count_pup(i) += Z_s(isp, S_i(i))*Pup_prop(isp)*Thin_i(isp, i)*Prop_photo_i(i);
+		  E_count_nophoto(i) += Z_s(isp, S_i(i))*Thin_i(isp, i)*(1.0 - Prop_photo_i(i));
 	  }
   }
   for (int i = 0; i<n_i; i++) {
 	  for (int itype = 0; itype<n_obs_types;itype++) {
-		  if (!isNA(C_i(i,itype))) jnll_comp(0) -= dtweedie(C_i(i, itype), E_count_obs(i, itype), phi(itype), power(itype), true);
+		  if (!isNA(C_i(i,itype)) && E_count_obs(i,itype)>0.0) jnll_comp(0) -= dtweedie(C_i(i, itype), E_count_obs(i, itype), phi(itype), power(itype), true);
 	  }
-	  if (!isNA(Pups_i(i))) jnll_comp(0) -= dtweedie(Pups_i(i), E_count_pup(i), phi(n_obs_types), power(n_obs_types), true);
+	  if (!isNA(Pups_i(i)) && E_count_pup(i)>0.0) jnll_comp(0) -= dtweedie(Pups_i(i), E_count_pup(i), phi(n_obs_types), power(n_obs_types), true);
+	  if (!isNA(Nophoto_i(i)) && E_count_nophoto(i)>0.0) jnll_comp(0) -= dtweedie(Nophoto_i(i), E_count_nophoto(i), phi(n_obs_types+1), power(n_obs_types+1), true);
   }
 
   //thinning prior
@@ -280,6 +286,9 @@ Type objective_function<Type>::operator() ()
   REPORT( beta );
   REPORT( Eta_s );
   REPORT(E_count_obs);
+  REPORT(E_count_sp);
+  REPORT(E_count_pup);
+  REPORT(E_count_nophoto);
   REPORT(Pup_prop);
   REPORT(Thin_i);
   REPORT(Z_s);

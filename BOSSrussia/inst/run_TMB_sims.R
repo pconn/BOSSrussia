@@ -32,7 +32,7 @@ prop_sampled=0.2
 Prop_sampled=rep(prop_sampled,n_samp)
 SpatialScale = sqrt(prod(grid_dim))/5  # Range ~ 2*Scale
 SD_eta = SD_x = SD_delta = 1
-beta0 = 2
+beta0 = 3
 Use_REML = FALSE   # 
 Spatial_sim_model = "GP_gaussian"
 Spatial_model = "SPDE_GMRF"
@@ -41,6 +41,10 @@ RandomSeed = 123456
 n_sim = 100
 n_species = 4
 n_obs_types = 5 #doesn't include pups
+Prop_photo = runif(n_samp,-.2,1.2)
+Prop_photo = runif(n_samp,0.8,0.95)
+Prop_photo[Prop_photo<0]=0
+Prop_photo[Prop_photo>1]=1 
 
 Thin = rep(0.6,n_species*n_samp)  #keeping this as a vector for use w MVNORM_t in TMB
 thin_logit = log(Thin/(1-Thin))
@@ -66,7 +70,7 @@ Results = array(NA,dim=c(n_sim,n_species,6))
 # Loop through replicates
 counter=1
 i=1
-for(i in 1:n_sim){
+#for(i in 1:n_sim){
     cat(paste("Simulation ",i,"\n"))
     set.seed( RandomSeed + i )
 
@@ -106,14 +110,23 @@ for(i in 1:n_sim){
       
     # Counting process
     Ctrue_i = matrix(0,n_species,n_samp)
-    Pups_i = rep(0,n_samp)
+    Pups_i = Nophoto_i=rep(0,n_samp)
+    Sum_lambda = rep(0,n_samp)
     for(isp in 1:n_species){
-      Ctrue_i[isp,] = rpois( n=n_samp, lambda=Ztrue_s[isp,s_i]*prop_sampled*(1-Pup_prop[isp])*Thin[(isp-1)*n_samp+c(1:n_samp)])
-      Pups_i = Pups_i + rpois(n=n_samp,lambda=Ztrue_s[isp,s_i]*prop_sampled*Pup_prop[isp]*Thin[(isp-1)*n_samp+c(1:n_samp)])
+      Ctrue_i[isp,] = rpois( n=n_samp, lambda=Prop_photo*Ztrue_s[isp,s_i]*prop_sampled*(1-Pup_prop[isp])*Thin[(isp-1)*n_samp+c(1:n_samp)])
+      Pups_i = Pups_i + rpois(n=n_samp,lambda=Prop_photo*Ztrue_s[isp,s_i]*prop_sampled*Pup_prop[isp]*Thin[(isp-1)*n_samp+c(1:n_samp)])
+      Sum_lambda = Sum_lambda + Ztrue_s[isp,s_i]*Thin[(isp-1)*n_samp+c(1:n_samp)]*prop_sampled
     }
+    
+    Nophoto_i = rpois(n=n_samp,(1-Prop_photo)*Sum_lambda)
+    
+    Tot_obs = colSums(Ctrue_i)+Pups_i+Nophoto_i
+    
+    
     #now confusion matrix on C_i
     C_i = matrix(0,n_samp,n_obs_types)
-    C_i = t(Ctrue_i)%*%misID_list$Confuse
+    C_i = round(t(Ctrue_i)%*%misID_list$Confuse)  #not strictly necessary to round since using Tweedie
+    #C_i =t(Ctrue_i)%*%misID_list$Confuse
     
     # Create the SPDE/GMRF model, (kappa^2-Delta)(tau x) = W:
     mesh = inla.mesh.create( loc_s )
@@ -125,7 +138,7 @@ for(i in 1:n_sim){
     # Data
     spde <- (inla.spde2.matern(mesh, alpha=2)$param.inla)[c("M0","M1","M2")]
     #Data = list( "Options_vec"=Options_vec, "c_i"=c_i, "P_i"=Prop_sampled,"A_s"=rep(1,n_cells),"s_i"=s_i-1, "X_sj"=cbind(1,x_s), "y_s"=y_s, "X_sk"=cbind(1,x_s),"X_sb"=matrix(1,n_cells,1), "spde"=spde)
-    Data = list( "C_i"=C_i, "Pups_i"=Pups_i,"P_i"=Prop_sampled,"A_s"=rep(1,n_cells),"S_i"=s_i-1,"Y_s"=y_s,"X_s"=matrix(1,n_cells,2), 
+    Data = list( "C_i"=C_i, "Pups_i"=Pups_i,"Nophoto_i"=Nophoto_i,"Prop_photo_i" = Prop_photo,"P_i"=Prop_sampled,"A_s"=rep(1,n_cells),"S_i"=s_i-1,"Y_s"=y_s,"X_s"=matrix(1,n_cells,2), 
                  "spde"=spde,"thin_mu_logit"=thin_logit,"Sigma_logit_thin"=as(Sigma_logit_thin,'dgTMatrix'),
                  "MisID_mu" = misID_list$MisID_Mu, "MisID_Sigma"=misID_list$MisID_Sigma, "MisID_pos_rows"=MisID_pos_rows-1,
                  "MisID_pos_cols" = MisID_pos_cols-1,"n_s"=n_cells,"n_sp"=n_species,
@@ -138,7 +151,7 @@ for(i in 1:n_sim){
     
     Params = list("beta"=matrix(0,n_species,ncol(Data$X_s)), 
                   "logtau_z"=rep(0,n_species), "logkappa_z"=rep(-.9,n_species),
-                  "phi_log"=rep(-1,6),"p_logit"=rep(0,6),"thin_logit_i"=thin_logit,"MisID_pars"=misID_list$MisID_Mu,
+                  "phi_log"=rep(0.01,n_species+3),"p_logit"=rep(0,n_species+3),"thin_logit_i"=thin_logit,"MisID_pars"=misID_list$MisID_Mu,
                   "logit_Pup_prop"=rep(-2,n_species))
     Params$beta[,1]=beta0 + runif(n_species,-0.1,0.1) #set mean expected abundance close to truth for faster optimization
     if(ncol(Data$X_s)>1)Params$beta[,2:ncol(Data$X_s)]=betax + runif(n_species,-0.1,0.1)
@@ -151,8 +164,9 @@ for(i in 1:n_sim){
     
     # Fix parameters
     Map = list()
-    Map[["phi_log"]]=factor(rep(1,6))
-    Map[["p_logit"]]=factor(rep(2,6))
+    #Map[["phi_log"]]=factor(rep(1,n_species+3))
+    Map[["phi_log"]]=factor(rep(NA,n_species+3))
+    Map[["p_logit"]]=factor(rep(2,n_species+3))
     Map[["logkappa_z"]] = factor(rep(3,n_species))
     Map[["logtau_z"]] = factor(rep(4,n_species))
     
@@ -164,7 +178,6 @@ for(i in 1:n_sim){
     #setwd( "C:/Users/paul.conn/git/OkhotskST/OkhotskSeal/src/")
     Obj = MakeADFun( data=Data, parameters=Params, random=Random, map=Map, silent=FALSE)
     #Obj = MakeADFun( data=Data, parameters=Params, map=Map, silent=FALSE)
-    
     Obj$fn( Obj$par )
 
     # Run
