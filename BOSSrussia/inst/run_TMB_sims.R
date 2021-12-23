@@ -38,7 +38,7 @@ Spatial_sim_model = "GP_gaussian"
 Spatial_model = "SPDE_GMRF"
 Alpha = 1  # Smoothness for GMRF, 1 or 2 (1 is faster)
 RandomSeed = 123456
-n_sim = 100
+n_sim = 10
 n_species = 4
 n_obs_types = 5 #doesn't include pups
 Prop_photo = runif(n_samp,-.2,1.2)
@@ -69,8 +69,8 @@ Results = array(NA,dim=c(n_sim,n_species,6))
 
 # Loop through replicates
 counter=1
-i=1
-#for(i in 1:n_sim){
+i=2
+for(i in 1:n_sim){
     cat(paste("Simulation ",i,"\n"))
     set.seed( RandomSeed + i )
 
@@ -158,7 +158,8 @@ i=1
     Params$Etainput_s = Etainput_s
 
     # Random
-    Random = c( "Etainput_s" )
+    #Random = c( "Etainput_s","thin_logit_i","MisID_pars","logit_Pup_prop" )
+    Random = c( "Etainput_s","thin_logit_i","logit_Pup_prop" )
     #if(Use_REML==TRUE) Random = c(Random,"Beta")
     #Random = list()
     
@@ -169,6 +170,7 @@ i=1
     Map[["p_logit"]]=factor(rep(2,n_species+3))
     Map[["logkappa_z"]] = factor(rep(3,n_species))
     Map[["logtau_z"]] = factor(rep(4,n_species))
+    Map[["MisID_pars"]]=factor(rep(NA,length(misID_list$MisID_Mu)))
     
       
     # Make object
@@ -188,7 +190,37 @@ i=1
     Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
     Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
     Report = Obj$report()
-
+    
+    
+    #now rerun with starting values = to output for fixed misID pars
+    Random = c( "Etainput_s","thin_logit_i","MisID_pars","logit_Pup_prop" )
+    Map[["MisID_pars"]]=NULL
+    Params = list("beta"=Report$beta, 
+                  "logtau_z"=rep(Opt$par["logtau_z"],n_species), "logkappa_z"=rep(Opt$par["logtau_z"],n_species),
+                  "phi_log"=rep(0.01,n_species+3),"p_logit"=rep(Opt$par["p_logit"],n_species+3),"thin_logit_i"=thin_logit,"MisID_pars"=misID_list$MisID_Mu,
+                  "logit_Pup_prop"=qlogis(Report$Pup_prop))
+    Params$Etainput_s = Etainput_s
+    Params$Etainput_s[,1:625]=Report$Eta_s
+    
+    # Make object
+    #compile( paste0(Version,".cpp") )
+    dyn.load( dynlib(TmbFile) )
+    Start_time = Sys.time()
+    #setwd( "C:/Users/paul.conn/git/OkhotskST/OkhotskSeal/src/")
+    Obj = MakeADFun( data=Data, parameters=Params, random=Random, map=Map, silent=FALSE)
+    #Obj = MakeADFun( data=Data, parameters=Params, map=Map, silent=FALSE)
+    Obj$fn( Obj$par )
+    
+    # Run
+    #Lower = -Inf
+    #Upper = Inf
+    Lower = -50  #trying to prevent -Inf,Inf bounds resulting in nlminb failure (NaN gradient)
+    Upper = 50
+    Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, maxit=1000))         #
+    Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
+    Report = Obj$report()
+    
+    
     # Potentially fix random fields with zero sample or population variance
     #if( any(Report$MargSD_z<0.001) ){
       #Which = which(Report$MargSD_z<0.001)
@@ -235,6 +267,8 @@ i=1
       #plot( x=Ztrue_s, y=R_s)
       #plot( x=Report$Z_s, y=Report$R_s)
 }
+
+Prop_bias = (Results[1:10,,3]-Results[1:10,,2])/Results[1:10,,2]
   
 # 
 # ####################

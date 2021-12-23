@@ -126,18 +126,24 @@ Type objective_function<Type>::operator() ()
   DATA_IVECTOR(MisID_pos_cols);   //ibid, columns
   DATA_INTEGER(n_s); //number of cells
   DATA_INTEGER(n_sp); //number of species
+  DATA_INTEGER(n_0);  //number of pseudo-zeroes (included in S_i)
   DATA_VECTOR(Pup_prop_mu);  //prior mean (logit scale) for pup proportion
   DATA_VECTOR(Pup_prop_sigma);  //prior sd for pup proportion (logit scale)
-
+  DATA_MATRIX(Beta_VC); //prior covariance matrix for regression parms
+  DATA_SCALAR(phi_max); //max value for Tweedie phi
+  DATA_VECTOR(Ice_s);  // ice for adjusting counts
+  DATA_SCALAR(beta_prior);  //weight for beta prior
+  
+  DATA_IVECTOR(Cells_reduced_s);  //Omits cells in NE corner
 
   // spatial covariance object
   DATA_STRUCT(spde, spde_t);
 
   // Parameters 
-  PARAMETER_MATRIX(beta);              // fixed effects on density
+  PARAMETER_VECTOR(beta);              // fixed effects on density
   PARAMETER_VECTOR(logtau_z);      
   PARAMETER_VECTOR(logkappa_z);
-  PARAMETER_VECTOR(phi_log);  //tweedie phi
+  PARAMETER_VECTOR(phi_logit);  //tweedie phi
   PARAMETER_VECTOR(p_logit);  // tweedie power
   PARAMETER_VECTOR(thin_logit_i);         // thinning "parameter" for each surveyed location (assumed MVN on logit scale)
   PARAMETER_VECTOR(MisID_pars);   //confusion matrix estimates (mlogit scale)
@@ -147,15 +153,17 @@ Type objective_function<Type>::operator() ()
   PARAMETER_MATRIX( Etainput_s );           // Spatial variation in abundance
 
   // derived sizes
-  int n_b = X_s.col(0).size();
+  int n_b = X_s.row(0).size();
   int n_i = C_i.col(0).size();
   //int n_i_model = Which_counts_model.size();
   int n_obs_types = C_i.row(0).size();
   int n_misID_par = MisID_pars.size();
   int n_re = Etainput_s.row(0).size();
+  int n_red = Cells_reduced_s.size();  
+  Type zero = 0;
  
   // global stuff
-  vector<Type> jnll_comp(5);
+  vector<Type> jnll_comp(6);
   jnll_comp.setZero();
   vector<Type> MargSD_z(n_sp);
   vector<Type> Range_z(n_sp);
@@ -169,6 +177,7 @@ Type objective_function<Type>::operator() ()
   }
   MVNORM_t<Type>neg_log_density_misID(MisID_Sigma);
   MVNORM_t<Type>neg_log_density_thin(Sigma_logit_thin);
+  MVNORM_t<Type>neg_log_density_beta(Beta_VC);
   matrix<Type> Thin_i(n_sp,n_i);  
   matrix<Type> Thin_trans(n_sp, n_i);
   for (int i = 0; i<n_i; i++) {
@@ -181,7 +190,7 @@ Type objective_function<Type>::operator() ()
   vector<Type> phi(n_obs_types+2);
   vector<Type> power(n_obs_types+2);
   for (int i = 0; i<(n_obs_types+2); i++) {
-	  phi(i) = exp(phi_log(i));
+	  phi(i) = phi_max / (1.0 + exp(-phi_logit(i)));
 	  power(i) = 1.0 + 1 / (1 + exp(-p_logit(i)));
   }
   
@@ -201,6 +210,7 @@ Type objective_function<Type>::operator() ()
 		  Psi(isp, itype) = exp(Psi(isp, itype)) / tmp_sum;
 	  }
   }
+  //std::cout<<"Psi "<<Psi<<'\n'<<'\n';
 
   // Transform random effects
   matrix<Type> Eta_s( n_sp,n_s );
@@ -226,22 +236,34 @@ Type objective_function<Type>::operator() ()
   // Predicted densities
   matrix<Type> Z_s(n_sp, n_s);
   matrix<Type> E_count_sp(n_sp, n_i);
+  matrix<Type> E_count_zero(n_sp, n_i);
   matrix<Type> E_count_obs(n_i, n_obs_types);
   vector<Type> E_count_pup(n_i);
   vector<Type> E_count_nophoto(n_i);
   vector<Type> linpredZ_s(n_s);
+  matrix<Type> Beta(n_sp,n_b);
   vector<Type> Beta_tmp(n_b);
+  int counter = 0;
   for (int isp = 0; isp<n_sp; isp++) {
-	  Beta_tmp = beta.row(isp);
+    for(int ib =0; ib<n_b; ib++){
+      Beta(isp,ib)=beta(counter);
+      counter++;
+    }
+	  Beta_tmp = Beta.row(isp);
 	  linpredZ_s = X_s * Beta_tmp;
 	  for (int is = 0; is < n_s; is++) {
 		  Z_s(isp, is) = exp(linpredZ_s(is)+Eta_s(isp, is));
 	  }
   }
+  //std::cout<<"Beta "<<Beta<<"\n";
+  //std::cout<<"Z_s "<<Z_s<<"\n";
+  //std::cout<<"linpred "<<linpredZ_s<<"\n";
+  //std::cout<<"Beta_tmp "<<Beta_tmp<<"\n";
 
   // Probability of counts
   E_count_obs = E_count_obs.setZero();
   E_count_pup = E_count_pup.setZero();
+  E_count_zero = E_count_zero.setZero();
   E_count_nophoto = E_count_nophoto.setZero();
   for (int i = 0; i<n_i; i++) {
 	  for (int isp = 0; isp<n_sp; isp++) {
@@ -253,12 +275,23 @@ Type objective_function<Type>::operator() ()
 		  E_count_nophoto(i) += Z_s(isp, S_i(i))*Thin_i(isp, i)*(1.0 - Prop_photo_i(i));
 	  }
   }
+  for (int i = 0; i<n_0; i++) {
+    for (int isp = 0; isp<n_sp; isp++) {
+      E_count_zero(isp, i) = Z_s(isp, S_i(n_i+i));
+    }
+  }
+
   for (int i = 0; i<n_i; i++) {
 	  for (int itype = 0; itype<n_obs_types;itype++) {
 		  if (!isNA(C_i(i,itype)) && E_count_obs(i,itype)>0.0) jnll_comp(0) -= dtweedie(C_i(i, itype), E_count_obs(i, itype), phi(itype), power(itype), true);
 	  }
 	  if (!isNA(Pups_i(i)) && E_count_pup(i)>0.0) jnll_comp(0) -= dtweedie(Pups_i(i), E_count_pup(i), phi(n_obs_types), power(n_obs_types), true);
 	  if (!isNA(Nophoto_i(i)) && E_count_nophoto(i)>0.0) jnll_comp(0) -= dtweedie(Nophoto_i(i), E_count_nophoto(i), phi(n_obs_types+1), power(n_obs_types+1), true);
+  }
+  for (int i = 0; i<n_0; i++){
+    for (int isp = 0; isp<n_sp;isp++) {
+      jnll_comp(0) -= dtweedie(zero, E_count_zero(isp,i), phi(isp), power(isp), true);
+    }
   }
 
   //thinning prior
@@ -271,19 +304,41 @@ Type objective_function<Type>::operator() ()
   for (int isp = 0; isp < n_sp; isp++) {
 	  jnll_comp(4) -= dnorm(logit_Pup_prop(isp), Pup_prop_mu(isp), Pup_prop_sigma(isp),true);
   }
-
+  
+  //beta prior
+  if(beta_prior>0.0){
+    jnll_comp(5) = beta_prior*neg_log_density_beta(beta);
+  }
+  
   //Type total_abundance = Z_s.sum();
-  vector<Type> total_abundance = Z_s.rowwise().sum();
+  vector<Type> total_abundance(n_sp);
+  matrix<Type> Z_adj(n_sp,n_s);
+  total_abundance.fill(0.0);
+  vector<Type> reduced_abundance(n_sp);
+  reduced_abundance.fill(0.0);
+  for(int isp =0;isp<n_sp;isp++){
+    for(int is=0;is<n_s;is++){
+      Z_adj(isp,is)=Z_s(isp,is)*Ice_s(is);
+      total_abundance(isp)+=Z_adj(isp,is);
+    }
+    for(int is=0;is<n_red;is++){
+      reduced_abundance(isp) += Z_adj(isp,Cells_reduced_s(is));
+    }
+  }
+  //= Z_s.rowwise().sum();
 
   // Total objective
   Type jnll = jnll_comp.sum();
+  //std::cout<<"jnll_comp: "<<jnll_comp<<"\n";
 
   // Reporting
   REPORT( Z_s );
+  REPORT( Z_adj);
   REPORT( total_abundance );
+  REPORT( reduced_abundance);
   REPORT( Range_z );
   REPORT( MargSD_z );
-  REPORT( beta );
+  REPORT( Beta );
   REPORT( Eta_s );
   REPORT(E_count_obs);
   REPORT(E_count_sp);
@@ -291,7 +346,6 @@ Type objective_function<Type>::operator() ()
   REPORT(E_count_nophoto);
   REPORT(Pup_prop);
   REPORT(Thin_i);
-  REPORT(Z_s);
   REPORT(Psi);
   REPORT(phi);
   REPORT(power);
@@ -301,6 +355,8 @@ Type objective_function<Type>::operator() ()
   
   // Bias correction output
   ADREPORT( total_abundance);
+  ADREPORT(reduced_abundance);
+  ADREPORT(Z_adj);
 
   return jnll;
 }
