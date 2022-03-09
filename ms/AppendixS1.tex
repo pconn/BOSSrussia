@@ -1,0 +1,216 @@
+%\documentclass[fleqn,10pt]{wlscirep}
+%\documentclass[fleqn,10pt]{svjour3}
+\documentclass{svjour3}
+\usepackage{lineno}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{booktabs} %lines in tables
+\usepackage{wasysym} %male/female symbols
+\usepackage{caption}
+\begin{document}
+\title{Abundance and distribution of ice-associated seals in the western Bering Sea and Sea of Okhotsk, 2012-2013}
+
+\author{Paul B. Conn \and
+        Irina S. Trukhanova \and
+        Peter L. Boveng \and
+        Alexander N. Vasiliev \and
+        Vladimir I. Chernook
+}
+\institute{P. B. Conn \at Marine Mammal Laboratory, Alaska Fisheries Science Center, NOAA National Marine Fisheries Service, Seattle, WA 98115, USA  \\
+  Tel.: +1-206-526-4235 \\
+  Fax.: +1-206-526-6615\\
+  \email{paul.conn@noaa.gov}
+     \and
+  I. S. Trukhanova \at Polar Science Center, Applied Physics Laboratory, University of Washington, 1013 NE 40th St., Seattle, WA 98105 USA
+     \and
+  P. L. Boveng \at Marine Mammal Laboratory, Alaska Fisheries Science Center, NOAA National Marine Fisheries Service, Seattle, WA 98115, USA
+     \and
+  A. N. Vasiliev \at Autotonomous Non-Commercial Organization, Ecological Center, ECOFACTOR, 11/1-10N Neyshlotskiy Lane, Saint-Petersburg, 194044 Russia
+     \and
+  V. Chernook \at Autotonomous Non-Commercial Organization, Ecological Center, ECOFACTOR, 11/1-10N Neyshlotskiy Lane, Saint-Petersburg, 194044 Russia
+}
+
+\journalname{Polar Biology}
+\titlerunning{Stable stage distributions}
+\authorrunning{P.B. Conn et al.}
+\journalname{Polar Biology}
+
+\maketitle
+
+
+\maketitle
+
+\captionsetup{labelformat=empty}
+
+\large
+\bigskip
+\textbf{Online Resource 1A}: Methods for constructing stable stage proportions for ice-associated seals
+\bigskip
+\small
+
+Here, we provide information on methods used to construct stable stage proportions for ice-associated seals in the Bering and Okhotsk Seas. These distributions are ultimately used in the main manuscript to calculate aerial survey availability for ribbon and spotted seals.  Predictions of haul-out behavior for these species differed by age-sex class \citep{LondonEtAl2019}, so calculation of a population-level haul-out correction factor also needs to consider the proportions of animals in each age-sex class.  Ringed and bearded seal haul-out records lacked complete age information (ringed) or had insufficient sample sizes (bearded) to estimate age- and sex-specific haul-out proportions, so age-sex class was omitted from these models \citep{LondonEtAl2019, BovengEtAl2021b}.  However, we still provide stable stage calculations for these species for general scientific interest even though they are not used in aerial survey corrections at this time.
+
+As indicated in the main text, we calculated $\pi_{k,i,age}$, the expected proportion of species $k$ that are of sex $i$ and age-class $a$.  We define age-classes as consisting of young-of year (yoy; under 1 year of age), subadult (sub; older than yoy but sexually immature), and adult (ad; sexually mature).  Assuming a 50/50 sex ratio of pups and equal survival schedules for males and females, we write the proportion in each age- and sex-class as
+\begin{eqnarray*}
+  \pi_{k,i,yoy} & = & 0.5 \nu_{k0}, \\
+  \pi_{k,i,sub} & = & 0.5 \sum_a (1-m_{k,i,a})\nu_{k,a}, \text{ and} \\
+  \pi_{k,i,ad} & = & 0.5 \sum_a m_{k,i,a} \nu_{k,a}, \text{ respectively.}
+\end{eqnarray*}
+Here, $\nu_{k,a}$ denotes the proportion of animals of species $k$ that are age $a$, and $m_{k,i,a}$ gives the proportion of species $k$, sex $i$ and age $a$ that are sexually mature (we thus allow the sexual maturity schedule to differ by sex).  We calculated $\nu_{k,a}$ as the dominant eigenvector from a Leslie matrix model \citep{Caswell2001} calculated for each species.  We used a model with a post-breeding census (so that fecundity represents both reproduction and first year survival).  The Leslie matrix used 40 ages, 0-39+, and was structured as follows:
+
+\begin{equation*}
+A=
+  \begin{bmatrix}
+    0 & F_{k,1} & F_{k,2}  & F_{k,3}  & \cdots \\
+    P_{k,0} & 0 & 0 & 0 & \cdots \\
+    0 & P_{k,1} & 0 & 0 & \cdots \\
+    0 & 0  & P_{k,2} & 0 & \ddots \\
+    \vdots & \ddots  & \ddots & \ddots & \ddots \\
+  \end{bmatrix}.
+\end{equation*}
+
+Notation associated with this matrix is defined in the subsequent sections.
+We now describe methods used to parameterize natural mortality, recruitment, and maturity schedules.
+
+\subsection*{Natural morality--}
+	We used results of a Bayesian, hierarchical meta-analysis \citep{TrukhanovaEtAl2018} to approximate expected natural mortality schedules.  We conducted this analysis exactly as described for ribbon seals in Trukhanova et al., fitting reduced additive Weibull models to a large number of phocid seal mortality datasets (listed in Trukhanova et al.) and then producing posterior predictions for individual species.  These models specify a U-shaped mortality curve, with typically high mortality at the beginning of life, followed by a period of low mortality, and finally increasing mortality at older ages corresponding to senescence.  We conducted analysis with the highest-ranked DIC model from Trukhanova et al. which included effects of subfamily, species, and dataset.  Predictions of annual survival probabilities ($P_{k,i}$) for species $k$ and age $i$ used in Leslie matrices are provided in Online Resource 1B.
+
+\subsection*{Recruitment--}
+
+We calculated per-capita fertility ($F_a$ as described in Caswell 2001) as  $F_{k,a}=P_{k,0} f_{k,a}$, where $P_{k,0}$ gives young-of-year survival and $f_{k,a}$ gives the expected number of female births (i.e. female offspring only) per age $a$ seal of species $k$.  We estimated $f_{k,a}$ using data on reproductive status of hunted seals from the western Bering Sea \citep[Tables 11, 24, 38, and 47 in][]{Fedoseev2000}. In particular, we used generalized additive models \citep{Wood2006} to estimate $f_{k,a}$ as a smooth function of age, using the model
+\begin{equation*}
+  y_{k,a} \sim \text{Binomial}(n_{k,a}, 2 f_{k,a}),
+\end{equation*}
+where $n_{k,a}$  gives the number of female specimens examined and $y_{k,a}$ gives the number of such females that were reported to have parturiated in the current year.  Note that the success probability of the binomial is multiplied by 2.0 to account for a 50:50 sex ratio (the maximum value that $f_{k,a}$ can obtain is 0.5 since it represents female offspring only). We fit these models with the “mgcv” package (Wood 2006) within the R statistical environment (R Development Core Team 2017).  In each model, we specified the basis for the smooth effects to have $k=3$ to prevent “humps” in the fertility-age distribution; to our mind, these would more likely indicate sampling irregularities than underlying processes.  Estimated parturition schedules (i.e. $f_{k,a}$ are presented in Online Resource 1C.
+
+\subsection*{Maturity--}
+
+We based sex-specific maturity schedules for females on the raw proportions of mature females reported in \citep[Tables 11, 24, 38, and 47 of][]{Fedoseev2000} for the western Bering Sea.  Data for proportion of mature ribbon seal males were taken from the text \citep[][, pg. 26]{Fedoseev2000}.  \citet{Fedoseev2000} does not provide raw maturity data for spotted, bearded, or ringed males, but does convey rough ranges for age-at-maturity for spotted and bearded seals, noting that they “attain maturity at . . . 5-6.” We thus developed a maturity schedule where 33\% of males are mature at age 5, 66\% are mature at age 6, and 100\% are mature at age 7.  In absence of data on maturity of ringed seal males, we set maturity for males equal to the female maturity schedule.  Resulting maturity schedules are reported in Online Resource 1D.
+
+\subsection*{Results--}
+
+Estimated stable stage proportions are presented in Online Resource 1E.  Notably, seals that are faster to reach sexual maturity (e.g., ringed seals) show a higher proportion of adults in the population than those that are slower to sexually mature.  For instance, ringed seals show similar proportions of subadults and adults.
+
+\bibliographystyle{spbasic}
+\bibliography{master_bib}
+
+
+
+% Table generated by Excel2LaTeX from sheet 'Sheet1'
+\begin{table}[htbp]
+  \centering
+  \caption{\textbf{Online Resource 1B} Annual survival probabilities ($P_{k,a}$) predicted by hierarchical meta-analysis of phocid seal natural mortality \citep{TrukhanovaEtAl2018}.}
+    \begin{tabular}{p{4.215em}cccc}
+    \toprule
+    \toprule
+    \textbf{Age} & \multicolumn{1}{p{4.215em}}{\textbf{Bearded}} & \multicolumn{1}{p{4.215em}}{\textbf{Ribbon}} & \multicolumn{1}{p{4.215em}}{\textbf{Ringed}} & \multicolumn{1}{p{4.215em}}{\textbf{Spotted}} \\
+    \midrule
+    \multicolumn{1}{c}{0} & 0.59  & 0.52  & 0.64  & 0.44 \\
+    \multicolumn{1}{c}{1} & 0.9   & 0.88  & 0.91  & 0.85 \\
+    \multicolumn{1}{c}{2} & 0.93  & 0.91  & 0.94  & 0.89 \\
+    \multicolumn{1}{c}{3} & 0.94  & 0.93  & 0.95  & 0.91 \\
+    \multicolumn{1}{c}{4} & 0.95  & 0.94  & 0.96  & 0.93 \\
+    \multicolumn{1}{c}{5} & 0.95  & 0.94  & 0.96  & 0.93 \\
+    \multicolumn{1}{c}{6} & 0.95  & 0.94  & 0.96  & 0.93 \\
+    \multicolumn{1}{c}{7} & 0.95  & 0.94  & 0.96  & 0.93 \\
+    \multicolumn{1}{c}{8} & 0.95  & 0.94  & 0.96  & 0.92 \\
+    \multicolumn{1}{c}{9} & 0.94  & 0.93  & 0.96  & 0.91 \\
+    \multicolumn{1}{c}{10} & 0.94  & 0.92  & 0.95  & 0.9 \\
+    \multicolumn{1}{c}{11} & 0.93  & 0.91  & 0.94  & 0.89 \\
+    \multicolumn{1}{c}{12} & 0.91  & 0.9   & 0.93  & 0.87 \\
+    \multicolumn{1}{c}{13} & 0.9   & 0.88  & 0.92  & 0.85 \\
+    \multicolumn{1}{c}{14} & 0.89  & 0.86  & 0.91  & 0.83 \\
+    \multicolumn{1}{c}{15} & 0.87  & 0.84  & 0.89  & 0.81 \\
+    \multicolumn{1}{c}{16} & 0.85  & 0.82  & 0.87  & 0.78 \\
+    \multicolumn{1}{c}{17} & 0.83  & 0.79  & 0.86  & 0.75 \\
+    \multicolumn{1}{c}{18} & 0.8   & 0.76  & 0.84  & 0.72 \\
+    \multicolumn{1}{c}{19} & 0.78  & 0.72  & 0.81  & 0.68 \\
+    \multicolumn{1}{c}{20} & 0.75  & 0.7   & 0.79  & 0.65 \\
+    \multicolumn{1}{c}{21} & 0.72  & 0.67  & 0.76  & 0.62 \\
+    \multicolumn{1}{c}{22} & 0.69  & 0.64  & 0.74  & 0.58 \\
+    \multicolumn{1}{c}{23} & 0.66  & 0.61  & 0.71  & 0.54 \\
+    \multicolumn{1}{c}{24} & 0.63  & 0.56  & 0.68  & 0.5 \\
+    \multicolumn{1}{c}{25} & 0.59  & 0.52  & 0.65  & 0.46 \\
+    \multicolumn{1}{c}{26} & 0.56  & 0.48  & 0.62  & 0.42 \\
+    \multicolumn{1}{c}{27} & 0.53  & 0.45  & 0.59  & 0.39 \\
+    \multicolumn{1}{c}{28} & 0.49  & 0.42  & 0.56  & 0.35 \\
+    \multicolumn{1}{c}{29} & 0.46  & 0.38  & 0.53  & 0.32 \\
+    \multicolumn{1}{c}{30} & 0.43  & 0.34  & 0.5   & 0.28 \\
+    \multicolumn{1}{c}{31} & 0.4   & 0.31  & 0.47  & 0.25 \\
+    \multicolumn{1}{c}{32} & 0.37  & 0.28  & 0.44  & 0.22 \\
+    \multicolumn{1}{c}{33} & 0.34  & 0.25  & 0.4   & 0.19 \\
+    \multicolumn{1}{c}{34} & 0.31  & 0.22  & 0.37  & 0.16 \\
+    \multicolumn{1}{c}{35} & 0.28  & 0.19  & 0.34  & 0.14 \\
+    \multicolumn{1}{c}{36} & 0.26  & 0.17  & 0.31  & 0.12 \\
+    \multicolumn{1}{c}{37} & 0.23  & 0.15  & 0.29  & 0.11 \\
+    \multicolumn{1}{c}{38} & 0.2   & 0.13  & 0.26  & 0.09 \\
+    \multicolumn{1}{c}{39+}   & 0.18  & 0.11  & 0.23  & 0.07 \\
+    \bottomrule
+    \end{tabular}%
+  \label{tab:addlabel}%
+\end{table}%
+
+
+% Table generated by Excel2LaTeX from sheet 'Sheet1'
+\begin{table}[htbp]
+  \centering
+  \caption{\textbf{Online Resource 1C} Expected per capita births as a function of seal age, as modeled using data from the western Bering Sea \citep{Fedoseev2000}}
+    \begin{tabular}{p{4.215em}cccc}
+    \toprule
+    \toprule
+    \textbf{Age} & \multicolumn{1}{p{4.215em}}{\textbf{Bearded}} & \multicolumn{1}{p{4.215em}}{\textbf{Ribbon}} & \multicolumn{1}{p{4.215em}}{\textbf{Ringed}} & \multicolumn{1}{p{4.215em}}{\textbf{Spotted}} \\
+    \midrule
+    \multicolumn{1}{c}{0} & 0     & 0     & 0     & 0 \\
+    \multicolumn{1}{c}{1} & 0     & 0     & 0     & 0 \\
+    \multicolumn{1}{c}{2} & 0     & 0.03  & 0     & 0 \\
+    \multicolumn{1}{c}{3} & 0     & 0.3   & 0     & 0.01 \\
+    \multicolumn{1}{c}{4} & 0.01  & 0.46  & 0     & 0.06 \\
+    \multicolumn{1}{c}{5} & 0.07  & 0.48  & 0.02  & 0.23 \\
+    \multicolumn{1}{c}{6} & 0.25  & 0.48  & 0.1   & 0.39 \\
+    \multicolumn{1}{c}{7} & 0.4   & 0.48  & 0.27  & 0.46 \\
+    \multicolumn{1}{c}{8} & 0.46  & 0.48  & 0.38  & 0.48 \\
+    \multicolumn{1}{c}{9+}    & 0.48  & 0.48  & 0.44  & 0.49 \\
+    \bottomrule
+    \end{tabular}%
+  \label{tab:addlabel}%
+\end{table}%
+
+
+% Table generated by Excel2LaTeX from sheet 'Sheet2'
+\begin{table}[htbp]
+  \centering
+  \caption{\textbf{Online Resource 1D} Proportion of mature male (\male) and female (\female) seals used to calculate the expected proportion of age 1+ seals that are immature (i.e. subadult) vs. mature (i.e. adult)}
+    \begin{tabular}{p{4.215em}cccccccc}
+    \toprule
+    \toprule
+    \textbf{Age} & \multicolumn{1}{p{4.215em}}{\textbf{Bearded-\female}} & \multicolumn{1}{p{4.215em}}{\textbf{Bearded- \male}} & \multicolumn{1}{p{4.215em}}{\textbf{Ribbon-\female}} & \multicolumn{1}{p{4.215em}}{\textbf{Ribbon-\male}} & \multicolumn{1}{p{4.215em}}{\textbf{Ringed-\female}} & \multicolumn{1}{p{4.215em}}{\textbf{Ringed-\male}} & \multicolumn{1}{p{4.215em}}{\textbf{Spotted-\female}} & \multicolumn{1}{p{4.215em}}{\textbf{Spotted-\male}} \\
+    \midrule
+    \multicolumn{1}{c}{0} & 0     & 0     & 0     & 0     & 0     & 0     & 0     & 0 \\
+    \multicolumn{1}{c}{1} & 0.03  & 0     & 0.03  & 0.15  & 0     & 0     & 0.01  & 0 \\
+    \multicolumn{1}{c}{2} & 0.1   & 0     & 0.74  & 0.84  & 0     & 0     & 0.21  & 0 \\
+    \multicolumn{1}{c}{3} & 0.41  & 0     & 0.97  & 1     & 0     & 0     & 0.73  & 0 \\
+    \multicolumn{1}{c}{4} & 0.68  & 0.33  & 1     & 1     & 0     & 0     & 0.92  & 0.33 \\
+    \multicolumn{1}{c}{5} & 0.82  & 0.67  & 1     & 1     & 0.55  & 0.55  & 0.98  & 0.67 \\
+    \multicolumn{1}{c}{6} & 1     & 1     & 1     & 1     & 0.75  & 0.75  & 1     & 1 \\
+    \multicolumn{1}{c}{7} & 1     & 1     & 1     & 1     & 0.84  & 0.84  & 1     & 1 \\
+    \multicolumn{1}{c}{8} & 1     & 1     & 1     & 1     & 1     & 1     & 1     & 1 \\
+    \multicolumn{1}{c}{9+}    & 1     & 1     & 1     & 1     & 1     & 1     & 1     & 1 \\
+    \bottomrule
+    \end{tabular}%
+  \label{tab:addlabel}%
+\end{table}%
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{stable_stage}
+\caption{\textbf{Online Resource 1E} Stable stage distributions determined by Leslie matrix modeling and maturity schedules for four species of ice-associated seal (bearded, ribbon, ringed, and spotted seals) in the Bering Sea.  Each bar (and text above the bar) represents the anticipated proportion of seals in each sex and stage class (YOY: less than 1-year-old; Sub-adult: age 1+ but sexually immature; Adult: sexually mature).}
+\label{fig:stable_stage}
+\end{figure}
+
+
+
+\end{document}
+

@@ -230,7 +230,7 @@ Type objective_function<Type>::operator() ()
   }
   
   //thinning prior
-  jnll_comp(1) = neg_log_density_thin(thin_logit_i - thin_mu_logit - Day_effect);
+  //jnll_comp(1) = neg_log_density_thin(thin_logit_i - thin_mu_logit - Day_effect);
   
   jnll_comp(1) += 10000.0 * pow(1.0 - exp(beta0_ringed + beta1_ringed*0.0) / (1.0+exp(beta0_ringed + beta1_ringed*0.0)),2.0);
   

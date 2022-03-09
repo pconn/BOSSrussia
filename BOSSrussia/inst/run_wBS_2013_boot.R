@@ -30,13 +30,11 @@ X_s$fi2=X_s$fi_nic^2
 
 ### Use Irina's models from Chernook et al. 2018
 X_s$Strata=factor(X_s$Strata)
-X_dm = model.matrix(~Strata*(ice_conc+ice2+dist_mainland+dist_contour),X_s)
+X_dm = model.matrix(~Strata*(ice_conc+ice2+dist_mainland+dist_shelf),X_s)
 X_dm = X_dm[,-1]  #take out intercept
 X_rd = X_bd = X_dm
 
-X_dm = model.matrix(~Strata+ice_conc+ice2+dist_contour,X_s)
-
-#X_sd = X_sd[,-c(6,8,10,12,14,15,16)]  #remove interactions in "north" strata since no seals observed there; also remove dist_shelf
+X_dm = model.matrix(~Strata+ice_conc+ice2+dist_shelf,X_s)
 X_rn = X_sd = X_dm[,-1]
 
 
@@ -67,59 +65,42 @@ Params = list("log_N" = rep(log(50000),n_species),"beta_sd"=rep(0,ncol(Data$X_sd
               "thin_beta_day" = rep(0,2*n_species),  
               "phi_logit"=rep(0,n_species+3),"p_logit"=rep(0,n_species+3),
                 "thin_logit_i"=Data$thin_mu_logit,"MisID_pars"=Data$MisID_mu,
-                "logit_Pup_prop"=Data$Pup_prop_mu,"beta0_ringed"=0,"beta1_ringed"=0)
+                "logit_Pup_prop"=Data$Pup_prop_mu,"beta0_ringed"=10,"beta1_ringed"=0)
+Params$thin_logit_i = Data$thin_mu_logit_nolair_chukchi
+Data$thin_mu_logit = Data$thin_mu_logit_nolair_chukchi
+Data$Sigma_logit_thin = Data$Sigma_logit_thin_nolair_chukchi
+Data$h_mean = 0 #not used currently
 
 
   # Random
-  #Random = c( "Etainput_s","thin_logit_i","MisID_pars","logit_Pup_prop" )
-  #Random = c( "Etainput_s","thin_logit_i","logit_Pup_prop" )
-  #Random = c("Etainput_s")
-  #Random = c("beta","thin_logit_i","logit_Pup_prop")
   Random = c("logit_Pup_prop") 
-  #Random = c("logit_Pup_prop","beta_sd","beta_rn","beta_bd","beta_rd")
-  #Random = NULL
-   #Random = list()
-  
+
   # Fix parameters
   Map = list()
-  #Map[["phi_log"]]=factor(rep(1,n_species+3))
-  #Map[["phi_log"]]=factor(rep(2,n_species+3))
-  #Map[["p_logit"]]=factor(rep(1,n_species+3))
   Map[["MisID_pars"]]=factor(rep(NA,length(Data$MisID_mu)))
   Map[["thin_beta_day"]]=factor(rep(NA,2*n_species))
   Map[["thin_logit_i"]]=factor(rep(NA,length(Data$thin_mu_logit)))
-  #Map[["Etainput_s"]]=factor(rep(NA,length(Params$Etainput_s)))
-  #Map[["logit_Pup_prop"]]=factor(rep(NA,length(Params$logit_Pup_prop)))
+  Map[["beta0_ringed"]]=Map[["beta1_ringed"]]=factor(rep(NA,1))  #turn off ringed seal lair model
   
   
   # Make object
-  #compile( paste0(Version,".cpp") )
   dyn.load( dynlib(TmbFile) )
   Start_time = Sys.time()
-  #setwd( "C:/Users/paul.conn/git/OkhotskST/OkhotskSeal/src/")
   Obj = MakeADFun( data=Data, parameters=Params, random=Random, map=Map, silent=FALSE)
-  #Obj = MakeADFun( data=Data, parameters=Params, map=Map, silent=FALSE)
   Obj$fn( Obj$par )
   
   # Run
-  #Lower = -Inf
-  #Upper = Inf
   Lower = -50  #trying to prevent -Inf,Inf bounds resulting in nlminb failure (NaN gradient)
   Upper = 50
   Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, lower=Lower, upper=Upper, control=list(trace=1, eval.max = 10000,maxit=10000))         #
   Opt[["diagnostics"]] = data.frame( "Param"=names(Obj$par), "Lower"=-Inf, "Est"=Opt$par, "Upper"=Inf, "gradient"=Obj$gr(Opt$par) )
   Report = Obj$report()
   
-  
-  #XY = coordinates(Grid)
-  #rownames(XY) = c(1:nrow(XY))
-  #plot_N_map_xy(N=Report$Z_s[1,],XY=XY) 
   Base = Report
   Converge=Opt$convergence
   # SD
   if(Converge==0){
     SD = sdreport( Obj, par.fixed=Opt$par,bias.correct=TRUE )
-    #}
     Opt[["run_time"]] = Sys.time()-Start_time
   }
   
@@ -143,7 +124,7 @@ Params = list("log_N" = rep(log(50000),n_species),"beta_sd"=rep(0,ncol(Data$X_sd
   
   
   set.seed(12345)
-  n_boot = 10
+  n_boot = 500
   N_boot = SD_boot = matrix(0,4,n_boot)
   Sigma_thin = as.matrix(Data$Sigma_logit_thin)
   Sigma_MisID = as.matrix(Data$MisID_Sigma)
@@ -151,7 +132,6 @@ Params = list("log_N" = rep(log(50000),n_species),"beta_sd"=rep(0,ncol(Data$X_sd
   
   for(iboot in 1:n_boot){
     cat(paste0("iboot = ",iboot,"\n"))
-    #Data$p = rbeta(1,17,8)
     Params$thin_logit_i=mgcv::rmvn(1,Data$thin_mu_logit,Sigma_thin)
     Params$MisID_pars=mgcv::rmvn(1,Data$MisID_mu,Sigma_MisID)
     
@@ -161,40 +141,14 @@ Params = list("log_N" = rep(log(50000),n_species),"beta_sd"=rep(0,ncol(Data$X_sd
     Opt = nlminb( start=Obj$par, objective=Obj$fn, lower=Lower, upper=Upper, control=list(trace=1, eval.max=1000, iter.max=1000))         #
     Report = Obj$report()
     
-    # if(Opt$convergence==0 & Opt$message!="X_convergence (3)"){
-    #   
-    #   #now turn ringed seal melt on
-    #   Params$log_N = Opt$par[1:2]
-    #   Params$phi_log_rus =Opt$par[3:5]
-    #   Params$p_logit_rus = Opt$par[6:8]
-    #   Params$phi_log_us = Opt$par[9:11]
-    #   Params$p_logit_us = Opt$par[12:14]
-    #   Params$p_sp_logit = Opt$par[15]
-    #   Params$log_lambda = Report$log_lambda
-    #   Params$Beta = Report$Beta
-    #   Map[["beta0_ringed"]]=NULL
-    #   Map[["beta1_ringed"]]=NULL
-    #   
-    #   Obj = MakeADFun( data=CHESS_data, parameters=Params, random=Random, map=Map, silent=FALSE)
-    #   Lower = -50  #trying to prevent -Inf,Inf bounds resulting in nlminb failure (NaN gradient)
-    #   Upper = 50
-    #   Opt = try(nlminb( start=Obj$par, objective=Obj$fn, lower=Lower, upper=Upper, control=list(trace=1, eval.max=1000, iter.max=1000)))         #
-    #   Report = Obj$report()
-    
     if(Opt$convergence==0 & Opt$message!="X_convergence (3)"){
       Converge[iboot]=1
-      #SD = sdreport( Obj, par.fixed=Opt$par,bias.correct=FALSE )
       N_boot[,iboot]=Report$N
-      #length_sd = length(SD$sd)
-      #SD_boot[,iboot]=SD$sd[(length_sd-1):length_sd]
       save.image('boot_out_wBS2013.RData')
     }
-    #}
-  }
+   }
   
-  #SE.bd = sqrt(mean((SD_boot[1,1:1000])^2,na.rm=TRUE)+var(N_boot[1,1:1000]))
-  #SE.rd = sqrt(mean((SD_boot[2,1:1000])^2,na.rm=TRUE)+var(N_boot[2,1:1000]))
-  
+
   SE.sd = sqrt(SD$sd[1]^2+var(N_boot[1,1:n_boot]))
   SE.rn = sqrt(SD$sd[2]^2+var(N_boot[2,1:n_boot]))
   SE.bd = sqrt(SD$sd[3]^2+var(N_boot[3,1:n_boot]))

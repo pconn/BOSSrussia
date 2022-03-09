@@ -352,7 +352,7 @@ for(i in 1:n)Grid_rows[i]=which(grid_sf$cell==Cell_num[i])
 Covs_ringed$dmelt_MDSDA = Covs_ringed$jday - c(grid_sf$MDSDA_2012[Grid_rows[1:n.12]],grid_sf$MDSDA_2013[Grid_rows[(n.12+1):n]])
 Covs_ringed$dmelt_Markus = Covs_ringed$jday - c(grid_sf$Markus_2012[Grid_rows[1:n.12]],grid_sf$Markus_2013[Grid_rows[(n.12+1):n]])
 
-load("c:/users/paul.conn/git/haulout/ringed/Temps_cell_year.RDa")  #waiting to do this until temp data avail on larger grid
+load("c:/users/paul.conn/git/haulout/ringed/Temps_cell_year.RDa")  
 Covs_ringed$spring_temp = c(Cell_temp_yr[Grid_rows[1:n.12],"2012"],Cell_temp_yr[Grid_rows[(n.12+1):n],"2013"])
 
 Pred_ho_ringed_chukchi = mgcv::predict.gam(m_MDSDA,newdata=Covs_ringed,type="response",se.fit=TRUE)
@@ -402,14 +402,22 @@ HO_out = list(Mu_bd_12 = Pred_ho_bearded_2012,Mu_sd_12=Pred_ho_spotted_2012,Mu_r
               Var_bd_12 = Var_ho_bearded_2012, Var_sd_12 = Var_ho_spotted_2012,Var_rn_12 = Var_ho_ribbon_2012,
               Mu_bd_13 = Pred_ho_bearded_2013,Mu_sd_13=Pred_ho_spotted_2013,Mu_rn_13=Pred_ho_ribbon_2013,
               Var_bd_13 = Var_ho_bearded_2013, Var_sd_13 = Var_ho_spotted_2013,Var_rn_13 = Var_ho_ribbon_2013,
-              Mu_rd_12_chukchi = Avail_chukchi[1:n.12],
-              Mu_rd_12_bering =  Avail_bering[1:n.12],
-              Mu_rd_13_chukchi = Avail_chukchi[(n.12+1):n],
-              Mu_rd_13_bering = Avail_bering[(n.12+1):n],
-              Var_rd_12_chukchi = Var_melt_chukchi[1:n.12,1:n.12],
-              Var_rd_12_bering = Var_melt_bering[1:n.12,1:n.12],
-              Var_rd_13_chukchi = Var_melt_chukchi[(n.12+1):n,(n.12+1):n],
-              Var_rd_13_bering = Var_melt_bering[(n.12+1):n,(n.12+1):n]
+              Mu_rd_12_lair_chukchi = Avail_chukchi[1:n.12],
+              Mu_rd_12_lair_bering =  Avail_bering[1:n.12],
+              Mu_rd_13_lair_chukchi = Avail_chukchi[(n.12+1):n],
+              Mu_rd_13_lair_bering = Avail_bering[(n.12+1):n],
+              Var_rd_12_lair_chukchi = Var_melt_chukchi[1:n.12,1:n.12],
+              Var_rd_12_lair_bering = Var_melt_bering[1:n.12,1:n.12],
+              Var_rd_13_lair_chukchi = Var_melt_chukchi[(n.12+1):n,(n.12+1):n],
+              Var_rd_13_lair_bering = Var_melt_bering[(n.12+1):n,(n.12+1):n],
+              Mu_rd_12_nolair_chukchi = Pred_ho_ringed_chukchi$fit[1:n.12],
+              Mu_rd_12_nolair_bering = Pred_ho_ringed_bering$fit[1:n.12],
+              Mu_rd_13_nolair_chukchi = Pred_ho_ringed_chukchi$fit[(n.12+1):n],
+              Mu_rd_13_nolair_bering = Pred_ho_ringed_bering$fit[(n.12+1):n],
+              Var_rd_12_nolair_chukchi = Pred_var_chukchi[1:n.12,1:n.12],
+              Var_rd_12_nolair_bering = Pred_var_bering[1:n.12,1:n.12],
+              Var_rd_13_nolair_chukchi = Pred_var_chukchi[(n.12+1):n,(n.12+1):n],
+              Var_rd_13_nolair_bering = Pred_var_bering[(n.12+1):n,(n.12+1):n]
               )
 save(HO_out,file="Avail_dists_BOSSrussia.RData")
 
@@ -459,46 +467,75 @@ mu_d = 1-57/189
 var_d = mu_d*(1-mu_d)/189
 Mu_d = rep(mu_d,n_surveyed)
 Var_d = diag(var_d,nrow=n_surveyed)
-Mu_ringed_12_bering = Mu_d * HO_out$Mu_rd_12_bering
-Mu_ringed_12_chukchi = Mu_d * HO_out$Mu_rd_12_chukchi
-X12b = X12c = Y = matrix(0,n_surveyed,n_surveyed)
+Mu_ringed_12_lair_bering = Mu_d * HO_out$Mu_rd_12_lair_bering
+Mu_ringed_12_lair_chukchi = Mu_d * HO_out$Mu_rd_12_lair_chukchi
+Mu_ringed_12_nolair_bering = Mu_d * HO_out$Mu_rd_12_nolair_bering
+Mu_ringed_12_nolair_chukchi = Mu_d * HO_out$Mu_rd_12_nolair_chukchi
+X12bl = X12cl = X12bn = X12cn = Y = matrix(0,n_surveyed,n_surveyed) #b=bering, c=chukchi, l=lair, n=no lair
 for(i in 1:n_surveyed){
   for(j in 1:n_surveyed){
-    X12b[i,j]= HO_out$Mu_rd_12_bering[i]*HO_out$Mu_rd_12_bering[j]
-    X12c[i,j]= HO_out$Mu_rd_12_chukchi[i]*HO_out$Mu_rd_12_chukchi[j]
+    X12bl[i,j]= HO_out$Mu_rd_12_lair_bering[i]*HO_out$Mu_rd_12_lair_bering[j]
+    X12cl[i,j]= HO_out$Mu_rd_12_lair_chukchi[i]*HO_out$Mu_rd_12_lair_chukchi[j]
+    X12bn[i,j]= HO_out$Mu_rd_12_nolair_bering[i]*HO_out$Mu_rd_12_nolair_bering[j]
+    X12cn[i,j]= HO_out$Mu_rd_12_nolair_chukchi[i]*HO_out$Mu_rd_12_nolair_chukchi[j]
     Y[i,j]= Mu_d[i]*Mu_d[j]
   }
 }
-Sigma_thin[[4]] = Y*HO_out$Var_rd_12_chukchi +
-  X12c*diag(Var_d)-
-  HO_out$Var_rd_12_chukchi*diag(Var_d)
-Sigma_thin_12c = Sigma_thin
+Sigma_thin[[4]] = Y*HO_out$Var_rd_12_lair_chukchi +
+  X12cl*diag(Var_d)-
+  HO_out$Var_rd_12_lair_chukchi*diag(Var_d)
+Sigma_thin_12cl = Sigma_thin
 
-Sigma_thin[[4]] = Y*HO_out$Var_rd_12_bering +
-  X12b*diag(Var_d)-
-  HO_out$Var_rd_12_bering*diag(Var_d)
-Sigma_thin_12b = Sigma_thin
+Sigma_thin[[4]] = Y*HO_out$Var_rd_12_lair_bering +
+  X12bl*diag(Var_d)-
+  HO_out$Var_rd_12_lair_bering*diag(Var_d)
+Sigma_thin_12bl = Sigma_thin
 
-Thin_12c = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_12_chukchi)
-Thin_12b = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_12_bering)
+Sigma_thin[[4]] = Y*HO_out$Var_rd_12_nolair_chukchi +
+  X12cl*diag(Var_d)-
+  HO_out$Var_rd_12_nolair_chukchi*diag(Var_d)
+Sigma_thin_12cn = Sigma_thin
 
-Sigma_thin_12b = as.matrix(bdiag(Sigma_thin_12b))
-Sigma_thin_12b = as(Sigma_thin_12b,"dgTMatrix")
-Sigma_thin_12c = as.matrix(bdiag(Sigma_thin_12c))
-Sigma_thin_12c = as(Sigma_thin_12c,"dgTMatrix")
+Sigma_thin[[4]] = Y*HO_out$Var_rd_12_nolair_bering +
+  X12bn*diag(Var_d)-
+  HO_out$Var_rd_12_nolair_bering*diag(Var_d)
+Sigma_thin_12bn = Sigma_thin
+
+Thin_12cl = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_12_lair_chukchi)
+Thin_12bl = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_12_lair_bering)
+Thin_12cn = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_12_nolair_chukchi)
+Thin_12bn = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_12_nolair_bering)
+
+Sigma_thin_12bl = as.matrix(bdiag(Sigma_thin_12bl))
+Sigma_thin_12bl = as(Sigma_thin_12bl,"dgTMatrix")
+Sigma_thin_12cl = as.matrix(bdiag(Sigma_thin_12cl))
+Sigma_thin_12cl = as(Sigma_thin_12cl,"dgTMatrix")
+Sigma_thin_12bn = as.matrix(bdiag(Sigma_thin_12bn))
+Sigma_thin_12bn = as(Sigma_thin_12bn,"dgTMatrix")
+Sigma_thin_12cn = as.matrix(bdiag(Sigma_thin_12cn))
+Sigma_thin_12cn = as(Sigma_thin_12cn,"dgTMatrix")
 
 #compute logit scale distribution using delta method
 diff_logit <- function(x) -1/(x*(x-1))
-Thin_logit_12b = log(Thin_12b/(1-Thin_12b))
-Diff_logit = diag(diff_logit(Thin_12b))
-Sigma_logit_thin_12b = Diff_logit %*% Sigma_thin_12b %*% t(Diff_logit)
-diag(Sigma_logit_thin_12b)=diag(Sigma_logit_thin_12b)+0.000001  #adding a  small nugget to  prevent numerical problems
+Thin_logit_12bl = log(Thin_12bl/(1-Thin_12bl))
+Diff_logit = diag(diff_logit(Thin_12bl))
+Sigma_logit_thin_12bl = Diff_logit %*% Sigma_thin_12bl %*% t(Diff_logit)
+diag(Sigma_logit_thin_12bl)=diag(Sigma_logit_thin_12bl)+0.000001  #adding a  small nugget to  prevent numerical problems
 
-diff_logit <- function(x) -1/(x*(x-1))
-Thin_logit_12c = log(Thin_12c/(1-Thin_12c))
-Diff_logit = diag(diff_logit(Thin_12c))
-Sigma_logit_thin_12c = Diff_logit %*% Sigma_thin_12c %*% t(Diff_logit)
-diag(Sigma_logit_thin_12c)=diag(Sigma_logit_thin_12c)+0.000001  #adding a  small nugget to  prevent numerical problems
+Thin_logit_12cl = log(Thin_12cl/(1-Thin_12cl))
+Diff_logit = diag(diff_logit(Thin_12cl))
+Sigma_logit_thin_12cl = Diff_logit %*% Sigma_thin_12cl %*% t(Diff_logit)
+diag(Sigma_logit_thin_12cl)=diag(Sigma_logit_thin_12cl)+0.000001  #adding a  small nugget to  prevent numerical proclems
+
+Thin_logit_12bn = log(Thin_12bn/(1-Thin_12bn))
+Diff_logit = diag(diff_logit(Thin_12bn))
+Sigma_logit_thin_12bn = Diff_logit %*% Sigma_thin_12bn %*% t(Diff_logit)
+diag(Sigma_logit_thin_12bn)=diag(Sigma_logit_thin_12bn)+0.000001  #adding a  small nugget to  prevent numerical probnems
+
+Thin_logit_12cn = log(Thin_12cn/(1-Thin_12cn))
+Diff_logit = diag(diff_logit(Thin_12cn))
+Sigma_logit_thin_12cn = Diff_logit %*% Sigma_thin_12cn %*% t(Diff_logit)
+diag(Sigma_logit_thin_12cn)=diag(Sigma_logit_thin_12cn)+0.000001  #adding a  small nugget to  prevent numerical procnems
 
 
 #repeat for 2013
@@ -547,46 +584,75 @@ mu_d = 1-57/189
 var_d = mu_d*(1-mu_d)/189
 Mu_d = rep(mu_d,n_surveyed)
 Var_d = diag(var_d,nrow=n_surveyed)
-Mu_ringed_13_bering = Mu_d * HO_out$Mu_rd_13_bering
-Mu_ringed_13_chukchi = Mu_d * HO_out$Mu_rd_13_chukchi
-X13b = X13c = Y = matrix(0,n_surveyed,n_surveyed)
+Mu_ringed_13_lair_bering = Mu_d * HO_out$Mu_rd_13_lair_bering
+Mu_ringed_13_lair_chukchi = Mu_d * HO_out$Mu_rd_13_lair_chukchi
+Mu_ringed_13_nolair_bering = Mu_d * HO_out$Mu_rd_13_nolair_bering
+Mu_ringed_13_nolair_chukchi = Mu_d * HO_out$Mu_rd_13_nolair_chukchi
+X13bl = X13cl = X13bn = X13cn = Y = matrix(0,n_surveyed,n_surveyed) #b=bering, c=chukchi, l=lair, n=no lair
 for(i in 1:n_surveyed){
   for(j in 1:n_surveyed){
-    X13b[i,j]= HO_out$Mu_rd_13_bering[i]*HO_out$Mu_rd_13_bering[j]
-    X13c[i,j]= HO_out$Mu_rd_13_chukchi[i]*HO_out$Mu_rd_13_chukchi[j]
+    X13bl[i,j]= HO_out$Mu_rd_13_lair_bering[i]*HO_out$Mu_rd_13_lair_bering[j]
+    X13cl[i,j]= HO_out$Mu_rd_13_lair_chukchi[i]*HO_out$Mu_rd_13_lair_chukchi[j]
+    X13bn[i,j]= HO_out$Mu_rd_13_nolair_bering[i]*HO_out$Mu_rd_13_nolair_bering[j]
+    X13cn[i,j]= HO_out$Mu_rd_13_nolair_chukchi[i]*HO_out$Mu_rd_13_nolair_chukchi[j]
     Y[i,j]= Mu_d[i]*Mu_d[j]
   }
 }
-Sigma_thin[[4]] = Y*HO_out$Var_rd_13_chukchi +
-  X13c*diag(Var_d)-
-  HO_out$Var_rd_13_chukchi*diag(Var_d)
-Sigma_thin_13c = Sigma_thin
+Sigma_thin[[4]] = Y*HO_out$Var_rd_13_lair_chukchi +
+  X13cl*diag(Var_d)-
+  HO_out$Var_rd_13_lair_chukchi*diag(Var_d)
+Sigma_thin_13cl = Sigma_thin
 
-Sigma_thin[[4]] = Y*HO_out$Var_rd_13_bering +
-  X13b*diag(Var_d)-
-  HO_out$Var_rd_13_bering*diag(Var_d)
-Sigma_thin_13b = Sigma_thin
+Sigma_thin[[4]] = Y*HO_out$Var_rd_13_lair_bering +
+  X13bl*diag(Var_d)-
+  HO_out$Var_rd_13_lair_bering*diag(Var_d)
+Sigma_thin_13bl = Sigma_thin
 
-Thin_13c = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_13_chukchi)
-Thin_13b = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_13_bering)
+Sigma_thin[[4]] = Y*HO_out$Var_rd_13_nolair_chukchi +
+  X13cl*diag(Var_d)-
+  HO_out$Var_rd_13_nolair_chukchi*diag(Var_d)
+Sigma_thin_13cn = Sigma_thin
 
-Sigma_thin_13b = as.matrix(bdiag(Sigma_thin_13b))
-Sigma_thin_13b = as(Sigma_thin_13b,"dgTMatrix")
-Sigma_thin_13c = as.matrix(bdiag(Sigma_thin_13c))
-Sigma_thin_13c = as(Sigma_thin_13c,"dgTMatrix")
+Sigma_thin[[4]] = Y*HO_out$Var_rd_13_nolair_bering +
+  X13bn*diag(Var_d)-
+  HO_out$Var_rd_13_nolair_bering*diag(Var_d)
+Sigma_thin_13bn = Sigma_thin
+
+Thin_13cl = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_13_lair_chukchi)
+Thin_13bl = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_13_lair_bering)
+Thin_13cn = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_13_nolair_chukchi)
+Thin_13bn = c(Mu_spotted, Mu_ribbon, Mu_bearded,Mu_ringed_13_nolair_bering)
+
+Sigma_thin_13bl = as.matrix(bdiag(Sigma_thin_13bl))
+Sigma_thin_13bl = as(Sigma_thin_13bl,"dgTMatrix")
+Sigma_thin_13cl = as.matrix(bdiag(Sigma_thin_13cl))
+Sigma_thin_13cl = as(Sigma_thin_13cl,"dgTMatrix")
+Sigma_thin_13bn = as.matrix(bdiag(Sigma_thin_13bn))
+Sigma_thin_13bn = as(Sigma_thin_13bn,"dgTMatrix")
+Sigma_thin_13cn = as.matrix(bdiag(Sigma_thin_13cn))
+Sigma_thin_13cn = as(Sigma_thin_13cn,"dgTMatrix")
 
 #compute logit scale distribution using delta method
 diff_logit <- function(x) -1/(x*(x-1))
-Thin_logit_13b = log(Thin_13b/(1-Thin_13b))
-Diff_logit = diag(diff_logit(Thin_13b))
-Sigma_logit_thin_13b = Diff_logit %*% Sigma_thin_13b %*% t(Diff_logit)
-diag(Sigma_logit_thin_13b)=diag(Sigma_logit_thin_13b)+0.000001  #adding a  small nugget to  prevent numerical problems
+Thin_logit_13bl = log(Thin_13bl/(1-Thin_13bl))
+Diff_logit = diag(diff_logit(Thin_13bl))
+Sigma_logit_thin_13bl = Diff_logit %*% Sigma_thin_13bl %*% t(Diff_logit)
+diag(Sigma_logit_thin_13bl)=diag(Sigma_logit_thin_13bl)+0.000001  #adding a  small nugget to  prevent numerical problems
 
-diff_logit <- function(x) -1/(x*(x-1))
-Thin_logit_13c = log(Thin_13c/(1-Thin_13c))
-Diff_logit = diag(diff_logit(Thin_13c))
-Sigma_logit_thin_13c = Diff_logit %*% Sigma_thin_13c %*% t(Diff_logit)
-diag(Sigma_logit_thin_13c)=diag(Sigma_logit_thin_13c)+0.000001  #adding a  small nugget to  prevent numerical problems
+Thin_logit_13cl = log(Thin_13cl/(1-Thin_13cl))
+Diff_logit = diag(diff_logit(Thin_13cl))
+Sigma_logit_thin_13cl = Diff_logit %*% Sigma_thin_13cl %*% t(Diff_logit)
+diag(Sigma_logit_thin_13cl)=diag(Sigma_logit_thin_13cl)+0.000001  #adding a  small nugget to  prevent numerical proclems
+
+Thin_logit_13bn = log(Thin_13bn/(1-Thin_13bn))
+Diff_logit = diag(diff_logit(Thin_13bn))
+Sigma_logit_thin_13bn = Diff_logit %*% Sigma_thin_13bn %*% t(Diff_logit)
+diag(Sigma_logit_thin_13bn)=diag(Sigma_logit_thin_13bn)+0.000001  #adding a  small nugget to  prevent numerical probnems
+
+Thin_logit_13cn = log(Thin_13cn/(1-Thin_13cn))
+Diff_logit = diag(diff_logit(Thin_13cn))
+Sigma_logit_thin_13cn = Diff_logit %*% Sigma_thin_13cn %*% t(Diff_logit)
+diag(Sigma_logit_thin_13cn)=diag(Sigma_logit_thin_13cn)+0.000001  #adding a  small nugget to  prevent numerical procnems
 
 
 
@@ -863,15 +929,19 @@ Nophoto_2013=Nophoto_i
 Prop_photo_2013=Prop_photo_i
 
 Data_2012 = list("C_i"=C_i_2012, "Pups_i"=Pups_2012,"Nophoto_i" = Nophoto_2012, "Prop_photo_i"=Prop_photo_2012,"P_i"=Area_trans_2012,"A_s"=rep(1-Hab_cov[,"land_cover"],t_steps_2012),"S_i"=S_i_2012-1,"X_s"=X_s_2012,
-                 "thin_mu_logit_bering"=Thin_logit_12b,"thin_mu_logit_chukchi"=Thin_logit_12c,
-                 "Sigma_logit_thin_bering"=as(Sigma_logit_thin_12b,'dgTMatrix'),"Sigma_logit_thin_chukchi"=as(Sigma_logit_thin_12c,'dgTMatrix'),
+                 "thin_mu_logit_lair_bering"=Thin_logit_12bl,"thin_mu_logit_lair_chukchi"=Thin_logit_12cl,
+                 "thin_mu_logit_nolair_bering"=Thin_logit_12bn,"thin_mu_logit_nolair_chukchi"=Thin_logit_12cn,
+                 "Sigma_logit_thin_lair_bering"=as(Sigma_logit_thin_12bl,'dgTMatrix'),"Sigma_logit_thin_lair_chukchi"=as(Sigma_logit_thin_12cl,'dgTMatrix'),
+                 "Sigma_logit_thin_nolair_bering"=as(Sigma_logit_thin_12bn,'dgTMatrix'),"Sigma_logit_thin_nolair_chukchi"=as(Sigma_logit_thin_12cn,'dgTMatrix'),
                  "X_day"=X_day_2012,"MisID_mu" = misID_list$MisID_Mu, "MisID_Sigma"=misID_list$MisID_Sigma,"MisID_pos_rows"=MisID_pos_rows-1,"MisID_pos_cols"=MisID_pos_cols-1,"n_s" = n_cells, "n_sp" = n_species,"Pup_prop_mu" = qlogis(Pup_props),"Pup_prop_sigma" = diag(Sigma_pup_logit),"n_0"=n_0,"n_t"=t_steps_2012)
 Data_2013 = list("C_i"=C_i_2013, "Pups_i"=Pups_2013,"Nophoto_i" = Nophoto_2013, "Prop_photo_i"=Prop_photo_2013,"P_i"=Area_trans_2013,"A_s"=rep(1-Hab_cov[,"land_cover"],t_steps_2013),"S_i"=S_i_2013-1,"X_s"=X_s_2013,
-                 "thin_mu_logit_bering"=Thin_logit_13b,"thin_mu_logit_chukchi"=Thin_logit_13c,
-                 "Sigma_logit_thin_bering"=as(Sigma_logit_thin_13b,'dgTMatrix'),"Sigma_logit_thin_chukchi"=as(Sigma_logit_thin_13c,'dgTMatrix'),
+                 "thin_mu_logit_lair_bering"=Thin_logit_13bl,"thin_mu_logit_lair_chukchi"=Thin_logit_13cl,
+                 "thin_mu_logit_nolair_bering"=Thin_logit_13bn,"thin_mu_logit_nolair_chukchi"=Thin_logit_13cn,
+                 "Sigma_logit_thin_lair_bering"=as(Sigma_logit_thin_13bl,'dgTMatrix'),"Sigma_logit_thin_lair_chukchi"=as(Sigma_logit_thin_13cl,'dgTMatrix'),
+                 "Sigma_logit_thin_nolair_bering"=as(Sigma_logit_thin_13bn,'dgTMatrix'),"Sigma_logit_thin_nolair_chukchi"=as(Sigma_logit_thin_13cn,'dgTMatrix'),
                  "X_day"=X_day_2013,"MisID_mu" = misID_list$MisID_Mu, "MisID_Sigma"=misID_list$MisID_Sigma,"MisID_pos_rows"=MisID_pos_rows-1,"MisID_pos_cols"=MisID_pos_cols-1,"n_s" = n_cells, "n_sp" = n_species,"Pup_prop_mu" = qlogis(Pup_props),"Pup_prop_sigma" = diag(Sigma_pup_logit),"n_0"=n_0,"n_t"=t_steps_2013)
-Data_2012$h_mean = c(mean(HO_out$Mu_sd_12), mean(HO_out$Mu_rn_12), mean(HO_out$Mu_bd_12),0.65)
-Data_2013$h_mean = c(mean(HO_out$Mu_sd_13), mean(HO_out$Mu_rn_13), mean(HO_out$Mu_bd_13),0.65)
+#Data_2012$h_mean = c(mean(HO_out$Mu_sd_12), mean(HO_out$Mu_rn_12), mean(HO_out$Mu_bd_12),0.65)
+#Data_2013$h_mean = c(mean(HO_out$Mu_sd_13), mean(HO_out$Mu_rn_13), mean(HO_out$Mu_bd_13),0.65)
 
 save(Data_2012,file = "wBS_2012_Data_TMB.RData")
 save(Data_2013,file = "wBS_2013_Data_TMB.RData")

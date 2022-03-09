@@ -1,0 +1,253 @@
+%\documentclass[fleqn,10pt]{wlscirep}
+%\documentclass[fleqn,10pt]{svjour3}
+\documentclass{svjour3}
+\usepackage{lineno}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{caption}
+
+\begin{document}
+\title{Abundance and distribution of ice-associated seals in the western Bering Sea and Sea of Okhotsk, 2012-2013}
+\titlerunning{Sensitivity analyses}
+
+\author{Paul B. Conn \and
+        Irina S. Trukhanova \and
+        Peter L. Boveng \and
+        Alexander N. Vasiliev \and
+        Vladimir I. Chernook
+}
+\institute{P. B. Conn \at Marine Mammal Laboratory, Alaska Fisheries Science Center, NOAA National Marine Fisheries Service, Seattle, WA 98115, USA  \\
+  Tel.: +1-206-526-4235 \\
+  Fax.: +1-206-526-6615\\
+  \email{paul.conn@noaa.gov}
+     \and
+  I. S. Trukhanova \at Polar Science Center, Applied Physics Laboratory, University of Washington, 1013 NE 40th St., Seattle, WA 98105 USA
+     \and
+  P. L. Boveng \at Marine Mammal Laboratory, Alaska Fisheries Science Center, NOAA National Marine Fisheries Service, Seattle, WA 98115, USA
+     \and
+  A. N. Vasiliev \at Autotonomous Non-Commercial Organization, Ecological Center, ECOFACTOR, 11/1-10N Neyshlotskiy Lane, Saint-Petersburg, 194044 Russia
+     \and
+  V. Chernook \at Autotonomous Non-Commercial Organization, Ecological Center, ECOFACTOR, 11/1-10N Neyshlotskiy Lane, Saint-Petersburg, 194044 Russia
+}
+
+\journalname{Polar Biology}
+
+\maketitle
+
+\captionsetup{labelformat=empty}
+
+
+\large
+\bigskip
+\textbf{Online Resource 2}: Description of sensitivity analyses for seal abundance models
+\bigskip
+\small
+
+We ran a number of sensitivity analyses to investigate how abundance estimates were impacted by alternate combinations of predictive covariates.  For both the Sea of Okhotsk (SO) and western Bering Sea (wBS), we sequentially removed candidate predictors from each seal species abundance intensity model; in a few cases, we also added predictors to show what could happen with extrapolation bias.  We next describe sensitivity analyses for the SO and wBS.
+
+\subsection*{SO sensitivity analysis}
+
+In the SO, we used a base model for each species where habitat preferences included (1) linear and quadratic effects for sea ice concentration, (2) linear and quadratic effects of $depth^{1/3}$, and linear effects for distance from land, distance from shelf break, and distance from ice edge.  We arrived at this model after experimenting with other configurations and striving for a model which maintained as much flexibility as possible while avoiding potentially problematic extrapolations to areas that weren't well sampled.  Our base model used predictions of ringed seal availability based on seals that were tagged in the Chukchi Sea \citep{LondonEtAl2022}.  After fitting this ``base model," we fit alternative models where environmental covariates were removed one at a time.  We also fit a model where ringed seal availability was based on seals in the Bering Sea (this sample is biased towards younger animals, who spend less time hauled-out), as well as model where species misclassification rates were set to 0.0.
+
+Models fit to seal counts in the SO were somewhat sensitive to model structure (Online Resource 2A).  This was particularly the case for ringed seals when alternative availability schedules based on Bering Sea seals were employed (Online Resource 2A).  The impact of ignoring species misidentification was also profound, with markedly different abundance estimates if this source of possible bias wasn't addressed.  Fortunately, we identified relatively few, low magnitude extrapolations (defined as predictions in unsampled grid cells being greater than those in sampled grid cells; see Online Resource 2B).  Owing to the large difference in AIC score for our base model (Online Resource 2A), we suggest these estimates are likely to most appropriate for management (i.e., roughly 220,000 bearded and ribbon seals, 180,000 ribbon seals, and 170,000 spotted seals).
+
+\subsection*{wBS sensitivity analysis}
+
+In the wBS, we ran a similar set of sensitivity analyses, but in this case removed habitat predictors one at a time for each species owing to greater overall sensitivity of results to model assumptions.  One major differences between the two analysis approaches was that bearded and ringed seals permitted more highly parameterized models than for ribbon and spotted seals. Ribbon and spotted seals were problematic in the wBS in that densities were often highest towards the eastern ice edge and transects did not always extend all the way out to these areas.  This often led to highly parameterized models predicting unrealistically high numbers of seals in locations that weren't sampled.  Our preferred models for ribbon and spotted seals were thus relatively simple.
+
+For bearded and ringed seals, our preferred model related latent abundance ($Z_{kj}$) for each species $k$ to covariates in cell $j$ using a loglinear modeling framework.  Using the ``formula" notation common to the R programming environment linear modeling functions \citep[e.g., lm, glm;][]{RTeam2017}, we write a model for $\log(\mu_{kj})$ in 2012 as
+
+$\sim Strata_j * (ice_j + ice_j^2 + dist.land_j + dist.shelf_j + dist.edge_j)$, and in 2013 as
+
+$\sim Strata_j * (ice_j + ice_j^2 + dist.land_j + dist.shelf_j)$
+
+That is, there were strata-specific effects of covariates representing sea ice concentration ($ice_j$) and distance from various features (dist.land: distance from land; dist.shelf: distance from 1000 m isobath; dist.edge: distance from ice edge).  The models differed between years because inclusion of $dist.edge$ resulted in clear extrapolations (see below).
+
+For ribbon and spotted seals, our preferred model for $\log(Z_{kj})$ in both years was
+
+$\sim Strata_j + ice_j + ice_j^2 + dist.shelf_j$.
+
+In this case, spatial strata was a simple additive effect, reducing the number of parameters.
+
+For each species and year, we sequentially left out terms for each species and recorded the impact on the fitted log likelihood, the abundance estimate of each species, and on extrapolation metrics defined in the main text.  We also investigated effects of adding covariates ($dist.land$ and $dist.edge$, for years and species for which they were missing).
+
+In 2012 in the wBS, abundance estimates of all species were fairly sensitive to model structure (Online Resource 2C).  However, bearded seal models with the highest log likelihoods (those best supported by the data) all seemed to agree on estimates in the 180,000-185,000 range.  Ribbon seal models varied widely, including estimates from 44,000-94,000, although the model with 94,000 (adding $dist.land$) was also accompanied with increased evidence of extrapolation in unsampled areas.  Thus, an estimate in the 44,000-65,000 range seems most appropriate.  Ringed seal estimates were mostly near 270,000, though some runs (e.g., omitting spatial strata) resulted in a higher estimate.  As one example of clear extrapolation (Online Resource 2D), substracting $dist.land$ from the ringed seal model resulted in an estimate close to 3,000,000; in this case, there were 841 additional extrapolations compared to the main model, with at least one unsampled cell predicted to have an abundance that was 155 times higher that in any sampled cell.  Spotted seal estimates ranged from 180,000 to 237,000 for models with high log likelihoods, with no clear model performing the best.  Estimates for individual species were often impacted by changes to model structure of other species, which is to be expected given how species misidentification was modeled.
+
+In 2013, abundance estimates were similarly sensitive to model structure, although to a lesser degree (Online Resource 2E).  For bearded seals, estimates of highly supported models were betweeen 144,000 and 162,000, with most on in the 140,000-150,000 range.  For ribbon seals, highly supported models produced estimates between 22,000 and 45,000; the model adding $dist.edge$ was a conspicuous example of extrapolation, with an estimate near 358,000 and anomalously high predictions in unsampled cells near the ice edge (Online Resource 2F).  Highly ranked ringed seal models produced estimates near 200,000 (at least, when discarding the model that added $dist.edge$ which also exhibited unfavorable extrapolation metrics).  Finally, highly ranked spotted seal models produced estimates in the 90,000-105,000 range.
+
+
+\bibliographystyle{spbasic}
+\bibliography{master_bib}
+
+
+
+
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Online Resource 2A} Results of sensitivity runs for 2013 surveys in the Sea of Okhotsk. The first column gives sensitivity run name, where ``main" is the preferred model presented in the main paper, ``no misID" is a model without species misidentification, and ``rd Bering" uses alternative predictions of ringed seal availability.  For the remaining models,  `-' and `+' indicate whether a particular covariate is added or subtracted from the main model, and (sp) gives the species for which a covariate was added or substracted (bd: bearded; rn: ribbon; rd: ringed; sd: spotted).  For each sensitivity run, we present the optimized log likelihood (LogL), the number of regression parameters ($k$), the difference in AIC score for each model compared to the ``main" model, and abundance estimates for each species (Nbd - Nsd).  The AIC score only included the number of regression parameters in the parameter count; positive values indicate increased predictive performance relative to our preferred model.}
+\begin{tabular}{lrrrrrrr}
+  \hline
+model & LogL & k & $\Delta$AIC & $N_{bd}$ & $N_{rn}$ & $N_{rd}$ & $N_{sd}$ \\
+  \hline
+main & 82500.9 & 32 & 0.0 & 218741 & 221228 & 179893 & 169870 \\
+  no misID & 80315.8 & 32 & -4370.1 & 196415 & 343313 & 216817 & 94287 \\
+  rd Bering & 82447.7 & 32 & -106.3 & 224998 & 220220 & 328360 & 193330 \\
+  -depth & 81923.0 & 24 & -1139.7 & 195955 & 219372 & 193981 & 192435 \\
+  -dist\_land & 81932.0 & 28 & -1129.7 & 228087 & 237944 & 188797 & 140340 \\
+  -dist\_break & 81984.7 & 28 & -1024.3 & 242765 & 237265 & 189334 & 154397 \\
+  -dist\_edge & 81939.9 & 28 & -1114.0 & 244226 & 233391 & 197001 & 156614 \\
+   \hline
+\end{tabular}
+\label{tab:sensOkhotsk}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Online Resource 2B} Extrapolation metrics associated with sensitivity runs for 2013 surveys in the Sea of Okhotsk. The first column gives sensitivity run name, where ``main" is the preferred model presented in the main paper, ``no misID" is a model without species misidentification, and ``rd Bering" uses alternative predictions of ringed seal availability.  For the remaining models,  `-' and `+' indicate whether a particular covariate is added or subtracted from the main model, and (sp) gives the species for which a covariate was added or substracted (bd: bearded; rn: ribbon; rd: ringed; sd: spotted).  For each sensitivity run, we present the number of spatial cells for which abundance of a given species was predicted to be greater than the maximum predicted for a sampled cell $n_{species}$, as well as the ratio of the maximum prediction in unsampled cells to the maximum prediction in sampled cells ($\Lambda_{species}$).}
+\begin{tabular}{lrrrrrrrr}
+  \hline
+model & $n_{bd}$ & $n_{rn}$ & $n_{rd}$ & $n_{sd}$ & $\Lambda_{bd}$ & $\Lambda_{rn}$ & $\Lambda_{rd}$ & $\Lambda_{sd}$ \\
+  \hline
+main & 0 & 0 & 1 & 3 & 1.00 & 1.00 & 1.00 & 1.05 \\
+  no misID & 0 & 2 & 0 & 1 & 1.00 & 1.06 & 1.00 & 1.09 \\
+  rd Bering & 0 & 0 & 1 & 1 & 1.00 & 1.00 & 1.04 & 1.07 \\
+  -depth & 0 & 1 & 0 & 11 & 1.00 & 1.05 & 1.00 & 2.10 \\
+  -dist\_land & 0 & 1 & 0 & 0 & 1.00 & 1.04 & 1.00 & 1.00 \\
+  -dist\_break & 2 & 0 & 0 & 0 & 1.05 & 1.00 & 1.00 & 1.00 \\
+  -dist\_edge & 0 & 2 & 0 & 0 & 1.00 & 1.07 & 1.00 & 1.00 \\
+   \hline
+\end{tabular}
+\label{tab:sensOkhotsk}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Online Resource 2C} Results of sensitivity runs for 2012 in the wBS. The first column gives sensitivity run name, where ``main" is the preferred model presented in the main paper, ``no misID" is an attempt at running the model without species misidentification (this model did not converge so no results are reported), and ``rd Bering" use Bering Sea predictions of ringed seal availability.  For the remaining models, `-' and `+' indicate whether a particular covariate is added or subtracted from the main model, and (sp) gives the species for which a covariate was added or substracted (bd: bearded; rn: ribbon; rd: ringed; sd: spotted).  For each sensitivity run, we present the optimized log likelihood (LogL), the number of regression parameters ($k$), the difference in AIC score for each model compared to the ``main" model, and abundance estimates for each species (Nbd - Nsd).  The AIC score only included the number of regression parameters in the parameter count; positive values indicate increased predictive performance relative to our preferred model.}
+\begin{tabular}{lrrrrrrr}
+  \hline
+Model & LogL & k & $\Delta$AIC & $N_{bd}$ & $N_{rn}$ & $N_{rd}$ & $N_{sd}$ \\
+  \hline
+main & -1633.91 & 44 & 0.00 & 185330 & 68564 & 272609 & 226003 \\
+  no misID & NA & 44 & NA & NA & NA & NA & NA \\
+  rd Bering & -1634.98 & 44 & -2.14 & 182512 & 68440 & 176335 & 230386 \\
+  -strata (bd) & -1651.72 & 35 & -17.63 & 220612 & 68544 & 264262 & 223535 \\
+  -dist\_land (bd) & -1642.63 & 42 & -13.44 & 166059 & 68919 & 293312 & 225291 \\
+  -dist\_shelf (bd) & -1634.52 & 42 & 2.78 & 185050 & 68712 & 274692 & 226454 \\
+  -dist\_edge (bd) & -1638.12 & 42 & -4.42 & 183229 & 68300 & 268545 & 224807 \\
+  -strata (rn) & -1633.91 & 42 & 4.00 & 185125 & 44395 & 272541 & 246628 \\
+  -dist\_shelf (rn) & -1635.40 & 43 & -0.98 & 186244 & 65954 & 272857 & 235788 \\
+  +dist\_edge (rn) & -1639.31 & 45 & -12.80 & 184757 & 65778 & 271990 & 236285 \\
+  +dist\_land (rn) & -1631.79 & 45 & 2.24 & 185166 & 93871 & 272529 & 223717 \\
+  -strata (rd) & -1651.05 & 35 & -16.28 & 180693 & 67542 & 311852 & 233532 \\
+  -dist\_land (rd) & -1640.12 & 42 & -8.42 & 183944 & 67269 & 3012168 & 223130 \\
+  -dist\_shelf (rd) & -1634.20 & 42 & 3.42 & 184591 & 68933 & 279506 & 229750 \\
+  -dist\_edge (rd) & -1639.73 & 42 & -7.65 & 183433 & 69216 & 268192 & 233725 \\
+  -strata (sd) & -1634.62 & 42 & 2.58 & 185231 & 77707 & 272551 & 190646 \\
+  -dist\_shelf (sd) & -1659.48 & 43 & -49.14 & 189241 & 93196 & 266579 & 184323 \\
+  +dist\_edge (sd) & -1633.15 & 45 & -0.48 & 185306 & 68764 & 272126 & 236785 \\
+  +dist\_land (sd) & -1633.91 & 45 & -2.00 & 185358 & 68567 & 272609 & 224906 \\
+   \hline
+\end{tabular}
+\label{tab:sens2012wBS}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Online Resource 2D} Extrapolation metrics associated with sensitivity runs for 2012 in the wBS. The first column gives sensitivity run name, where ``main" is the preferred model presented in the main paper, ``no misID" is an attempt at running the model without species misidentification (this model did not converge so no results are reported), and ``rd Bering" used Bering Sea predictions of ringed seal availability.  For the remaining models, `-' and `+' indicate whether a particular covariate is added or subtracted from the main model, and (sp) gives the species for which a covariate was added or substracted (bd: bearded; rn: ribbon; rd: ringed; sd: spotted).  For each sensitivity run, we present the number of spatio-temporal cells for which abundance of a given species was predicted to be greater than the maximum predicted for sampled cells $n_{species}$, as well as the ratio of the maximum prediction in unsampled cells to the maximum prediction in sampled cells ($\Lambda_{species}$). }
+\begin{tabular}{lrrrrrrrr}
+  \hline
+Model & $n_{bd}$ & $n_{rn}$ & $n_{rd}$ & $n_{sd}$ & $\Lambda_{bd}$ & $\Lambda_{rn}$ & $\Lambda_{rd}$ & $\Lambda_{sd}$ \\
+  \hline
+main & 33 & 5 & 89 & 252 & 2.96 & 1.04 & 1.52 & 2.10 \\
+  no misID & NA & NA & NA & NA & NA & NA  & NA & NA \\
+  rd Bering & 11 & 5 & 139 & 251 & 4.52 & 1.04 & 2.11 & 2.14 \\
+  -strata (bd) & 33 & 5 & 89 & 101 & 2.80 & 1.04 & 1.52 & 1.54 \\
+  -dist\_land (bd) & 72 & 180 & 89 & 7 & 4.38 & 1.83 & 1.53 & 1.01 \\
+  -dist\_shelf (bd) & 32 & 5 & 88 & 197 & 2.79 & 1.05 & 1.52 & 2.08 \\
+  -dist\_edge (bd) & 33 & 5 & 89 & 248 & 2.99 & 1.04 & 1.52 & 2.08 \\
+  -strata (rn) & 33 & 3 & 89 & 385 & 2.98 & 1.04 & 1.52 & 2.41 \\
+  -dist\_shelf (rn) & 37 & 51 & 89 & 259 & 3.32 & 1.07 & 1.52 & 2.25 \\
+  +dist\_edge (rn) & 33 & 36 & 89 & 321 & 2.89 & 1.53 & 1.52 & 2.19 \\
+  +dist\_land (rn) & 33 & 423 & 89 & 244 & 2.88 & 2.28 & 1.52 & 2.04 \\
+  -strata (rd) & 153 & 5 & 60 & 248 & 1.81 & 1.04 & 2.30 & 2.07 \\
+  -dist\_land (rd) & 246 & 5 & 92 & 246 & 2.69 & 1.04 & 2.17 & 2.05 \\
+  -dist\_shelf (rd) & 70 & 5 & 92 & 252 & 1.61 & 1.04 & 1.53 & 2.10 \\
+  -dist\_edge (rd) & 16 & 4 & 76 & 247 & 2.02 & 1.04 & 1.48 & 2.05 \\
+  -strata (sd) & 20 & 8 & 182 & 242 & 2.41 & 1.07 & 2.10 & 2.07 \\
+  -dist\_shelf (sd) & 17 & 5 & 931 & 251 & 2.18 & 1.04 & 156.66 & 2.02 \\
+  +dist\_edge (sd) & 66 & 5 & 120 & 257 & 2.01 & 1.04 & 1.74 & 2.15 \\
+  +dist\_land (sd) & 79 & 7 & 109 & 255 & 1.81 & 1.05 & 1.52 & 2.17 \\
+   \hline
+\end{tabular}
+\label{tab:extrap2012wBS}
+\end{table}
+
+
+
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Online Resource 2E} Results of sensitivity runs for 2013 in the wBS. The first column gives sensitivity run name, where ``main" is the preferred model presented in the main paper, ``no misID" is a model without species misidentification, and ``rd Bering" used Bering Sea predictions of ringed seal availability.  For the remaining models, `-' and `+' indicate whether a particular covariate is added or subtracted from the main model, and (sp) gives the species for which a covariate was added or substracted (bd: bearded; rn: ribbon; rd: ringed; sd: spotted).  For each sensitivity run, we present the optimized log likelihood (LogL), the number of regression parameters ($k$), the difference in AIC score for each model compared to the ``main" model, and abundance estimates for each species (Nbd - Nsd).  The AIC score only included the number of regression parameters in the parameter count; positive values indicate increased predictive performance relative to our preferred model.}
+\begin{tabular}{lrrrrrrr}
+  \hline
+Model & LogL & k & $\Delta$AIC & $N_{bd}$ & $N_{rn}$ & $N_{rd}$ & $N_{sd}$ \\
+  \hline
+main & -1926.46 & 38 & 0.00 & 144105 & 39435 & 203130 & 90501 \\
+  no misID & -1912.99 & 38 & 26.94 & 138197 & 44133 & 227465 & 80079 \\
+  rd Bering & -1942.09 & 38 & -31.24 & 150409 & 39184 & 420815 & 99194 \\
+  -strata (bd) & -1955.82 & 29 & -40.71 & 166127 & 41495 & 217272 & 95460 \\
+  -dist\_land (bd) & -1941.64 & 36 & -26.35 & 144967 & 37669 & 215152 & 93357 \\
+  -dist\_shelf (bd) & -1929.20 & 36 & -1.47 & 161824 & 38412 & 205441 & 90567 \\
+  +dist\_edge (bd) & -1926.15 & 36 & 4.63 & 140869 & 39502 & 203179 & 90068 \\
+  -strata (rn) & -1926.41 & 36 & 4.11 & 144643 & 22131 & 205321 & 89680 \\
+  -dist\_shelf (rn) & -1934.86 & 37 & -14.79 & 144449 & 27598 & 203704 & 90765 \\
+  +dist\_edge (rn) & -1938.16 & 39 & -25.40 & 144351 & 357766 & 205949 & 91731 \\
+  +dist\_land (rn) & -1924.06 & 39 & 2.81 & 143943 & 36764 & 202909 & 90567 \\
+  -strata (rd) & -1962.45 & 29 & -53.97 & 148011 & 42380 & 164027 & 107311 \\
+  -dist\_land (rd) & -1935.94 & 36 & -14.96 & 149327 & 40148 & 185105 & 93390 \\
+  -dist\_shelf (rd) & -1932.50 & 36 & -8.08 & 143975 & 40158 & 198466 & 91398 \\
+  -dist\_edge (rd) & -1910.02 & 36 & 36.90 & 141903 & 39065 & 242274 & 109782 \\
+  -strata (sd) & -1932.48 & 36 & -8.04 & 152071 & 32899 & 226811 & 165388 \\
+  -dist\_shelf (sd) & -1932.84 & 37 & -10.75 & 145412 & 41755 & 205026 & 83635 \\
+  +dist\_edge (sd) & -1923.38 & 39 & 4.16 & 147970 & 45122 & 209494 & 104827 \\
+  +dist\_land (sd) & -1926.41 & 39 & -1.89 & 144183 & 39438 & 203380 & 89657 \\
+   \hline
+\end{tabular}
+\label{tab:sens2013wBS}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Online Resource 2F} Extrapolation metrics associated with sensitivity runs for 2013 in the wBS. The first column gives sensitivity run name, where ``main" is the preferred model presented in the main paper, ``no misID" is a model without species misidentification, and ``rd Bering" used alternative predictions of ringed seal availability.  For the remaining models, `-' and `+' indicate whether a particular covariate is added or subtracted from the main model, and (sp) gives the species for which a covariate was added or substracted (bd: bearded; rn: ribbon; rd: ringed; sd: spotted).  For each sensitivity run, we present the number of spatio-temporal cells for which abundance of a given species was predicted to be greater than the maximum predicted for sampled cells $n_{species}$, as well as the ratio of the maximum prediction in unsampled celsl to the maximum prediction in sampled cells ($\Lambda_{species}$). }
+\begin{tabular}{lrrrrrrrr}
+  \hline
+Model & $n_{bd}$ & $n_{rn}$ & $n_{rd}$ & $n_{sd}$ & $\Lambda_{bd}$ & $\Lambda_{rn}$ & $\Lambda_{rd}$ & $\Lambda_{sd}$ \\  \hline
+main & 1 & 120 & 35 & 89 & 1.01 & 2.66 & 1.23 & 2.05 \\
+  no misID & 0 & 138 & 46 & 60 & 1.00 & 2.20 & 1.33 & 1.93 \\
+  rd Bering & 1 & 120 & 210 & 91 & 1.00 & 2.67 & 1.71 & 1.98 \\
+  -strata (bd) & 1 & 126 & 111 & 88 & 1.01 & 2.58 & 14.96 & 1.76 \\
+  -dist\_land (bd) & 2 & 120 & 35 & 8 & 1.01 & 2.73 & 1.30 & 1.03 \\
+  -dist\_shelf (bd) & 2 & 120 & 26 & 30 & 1.01 & 2.79 & 1.19 & 1.79 \\
+  +dist\_edge (bd) & 1 & 120 & 35 & 94 & 1.01 & 2.66 & 1.24 & 1.96 \\
+  -strata (rn) & 1 & 186 & 33 & 81 & 1.01 & 2.74 & 1.22 & 1.99 \\
+  -dist\_shelf (rn) & 2 & 387 & 33 & 83 & 1.01 & 1.30 & 1.23 & 2.02 \\
+  +dist\_edge (rn) & 1 & 357 & 38 & 95 & 1.01 & 21.92 & 1.25 & 2.07 \\
+  +dist\_land (rn) & 1 & 84 & 36 & 89 & 1.01 & 2.37 & 1.23 & 2.05 \\
+  -strata (rd) & 185 & 120 & 46 & 62 & 1.84 & 2.74 & 1.31 & 1.83 \\
+  -dist\_land (rd) & 4 & 121 & 42 & 84 & 1.35 & 2.69 & 1.33 & 1.97 \\
+  -dist\_shelf (rd) & 0 & 121 & 35 & 98 & 1.00 & 2.67 & 1.24 & 2.07 \\
+  -dist\_edge (rd) & 5 & 120 & 37 & 91 & 1.06 & 2.65 & 1.22 & 2.06 \\
+  -strata (sd) & 3 & 119 & 6 & 94 & 1.07 & 2.63 & 1.08 & 2.00 \\
+  -dist\_shelf (sd) & 3 & 119 & 6 & 98 & 1.02 & 2.64 & 1.05 & 2.12 \\
+  +dist\_edge (sd) & 2 & 120 & 35 & 89 & 1.01 & 2.69 & 1.24 & 2.03 \\
+  +dist\_land (sd) & 1 & 120 & 21 & 89 & 1.01 & 2.68 & 5.01 & 1.94 \\
+   \hline
+\end{tabular}
+\label{tab:extrap2013wBS}
+\end{table}
+
+
+\end{document}
+
