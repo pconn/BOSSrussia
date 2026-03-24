@@ -1,9 +1,9 @@
 
 
 
-library( RandomFields )
+#library( RandomFields )
 library( TMB )
-library( INLA )
+#library( INLA )
 library(sf)
 #library(TMBdebug)
 
@@ -160,7 +160,7 @@ Ests$Z = Report$Z_adj
 
 
 seed.base=10000
-n_boot = 150
+n_boot = 1000
 N_boot = SD_boot = matrix(0,4,n_boot)
 Sigma_thin = as.matrix(Data$Sigma_logit_thin)
 Sigma_MisID = as.matrix(Data$MisID_Sigma)
@@ -219,4 +219,4 @@ SE.bd = sqrt(SD$sd[3]^2+var(N_boot[3,Which_converge]))
 SE.rd = sqrt(SD$sd[4]^2+var(N_boot[4,Which_converge]))
 
 Boot_out = list(N_boot=N_boot,Converge=Converge)
-save(Boot_out,'boot_out_Okhotsk_Apr2021_1.RData')
+save(Boot_out,file='boot_out_Okhotsk_Mar2026.RData')

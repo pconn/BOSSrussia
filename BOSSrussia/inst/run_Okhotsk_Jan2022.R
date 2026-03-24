@@ -1,10 +1,10 @@
 
 
 
-library( RandomFields )
-library( TMB )
-library( INLA )
+#library( RandomFields )
 library(sf)
+#library(INLA)
+library( TMB )
 
 #library(TMBdebug)
 
@@ -20,7 +20,7 @@ compile(paste0(TmbFile,".cpp"),"-O1 -g",DLLFLAGS="")
 source('./BOSSrussia/R/util_funcs.R')
 load("./Okhotsk_Grid_2013.rdat")
 Grid=Data$Grid  #for plotting
-load('c:/users/paul.conn/git/okhotskST/Okhotsk_TMB_data_Jan2022.RData')  #created with format_Okhotsk_TMB.R script in OkhotskST project
+load('c:/users/paul.conn/git/BOSSrussia/Okhotsk_TMB_data_Jan2022.RData')  #created with format_Okhotsk_TMB.R script in OkhotskST project
 
 
 
@@ -295,21 +295,21 @@ cor(Data$X_s[,"depth"],Data$X_s[,"ice"])
 #maximum absolute correlation about 0.54
 
 #log-based CIs
-load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_1.RData")
-N_boot_tot = N_boot[,which(Converge==1)]
-load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_2.RData")
-N_boot_tot=cbind(N_boot_tot,N_boot[,which(Converge==1)])
-load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_3.RData")
-N_boot_tot=cbind(N_boot_tot,N_boot[,which(Converge==1)])
-load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_4.RData")
-N_boot_tot=cbind(N_boot_tot,N_boot[,which(Converge==1)])
+# load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_1.RData")
+# N_boot_tot = N_boot[,which(Converge==1)]
+# load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_2.RData")
+# N_boot_tot=cbind(N_boot_tot,N_boot[,which(Converge==1)])
+# load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_3.RData")
+# N_boot_tot=cbind(N_boot_tot,N_boot[,which(Converge==1)])
+# load("c:/users/paul.conn/git/BOSSrussia/boot_out_Okhotsk_4.RData")
+# N_boot_tot=cbind(N_boot_tot,N_boot[,which(Converge==1)])
 
-#SEs = c(37628,42847,91829,221963) #from run_Okhotsk_boot
-SE_fun <- function(x) sqrt(var(x))
-SEs = apply(N_boot_tot,1,'SE_fun')
-C = exp(1.96 * sqrt(log(1+(SEs/Report$total_abundance)^2)))
-CI_lo<- Report$total_abundance/C
-CI_hi<- Report$total_abundance*C
+SEs = c(34130,28954,45724,24966) #from run_Okhotsk_boot
+#SE_fun <- function(x) sqrt(var(x))
+#SEs = apply(N_boot_tot,1,'SE_fun')
+C = exp(1.96 * sqrt(log(1+(SEs/mod_base$total_abundance)^2)))
+CI_lo<- mod_base$total_abundance/C
+CI_hi<- mod_base$total_abundance*C
 CI_lo
 CI_hi
 
@@ -568,8 +568,8 @@ library(xtable)
 print(xtable(Sens_table,digits=c(0,0,0,0,0,0,2,2,2,2)),include.rownames=FALSE)
 
 
-"sum(Ik)"=colSums(Extrap_num),
-"max(Lambda)"=apply(Extrap_ratio,2,'max')
+#"sum(Ik)"=colSums(Extrap_num),
+#"max(Lambda)"=apply(Extrap_ratio,2,'max')
 
 
 
